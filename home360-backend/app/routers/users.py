@@ -33,7 +33,7 @@ from app.models.responses.UserResponses import (
 
 from app.models.requests.UserRequests import (
     UserLoginRequest,
-    PatientRegisterRequest,
+    UserRegisterRequest,
     PhysicianRegisterRequest,
     ChangePasswordRequest,
     LaboratoryRegisterRequest
@@ -136,7 +136,7 @@ async def login_user(
 )
 async def register(
     register_request: Annotated[
-        Union[PatientRegisterRequest, PhysicianRegisterRequest, LaboratoryRegisterRequest],
+        Union[UserRegisterRequest, PhysicianRegisterRequest],
         Body(discriminator="role"),
     ]
 ):
@@ -150,6 +150,7 @@ async def register(
     """
 
     url = os.environ.get("REGISTER_URL")
+    print("Entra")
     auth_uid = None
     try:
         user = auth.get_user_by_email(register_request.email)
@@ -173,19 +174,19 @@ async def register(
             )
 
     del register_request.password
-    if register_request.role == "patient":
+    if register_request.role == "user":
         patient_data = {
             key: value
             for key, value in register_request.model_dump().items()
-            if key not in ["birth_date", "gender", "blood_type"]
+            #if key not in ["birth_date", "gender", "blood_type"]
         }
         patient = Patient(**patient_data, id=auth_uid)
         patient.create()
-        record_data = {
-            key: value
-            for key, value in register_request.model_dump().items()
-            if key not in ["role", "email"]
-        }
+        #record_data = {
+            #key: value
+            #for key, value in register_request.model_dump().items()
+            #if key not in ["role", "email"]
+        #}
         #record = Record(**record_data, id=auth_uid)
         #record.create()
         email_type = "PATIENT_REGISTERED_ACCOUNT"

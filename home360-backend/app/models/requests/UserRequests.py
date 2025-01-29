@@ -9,14 +9,15 @@ class UserLoginRequest(BaseModel):
     password: str
 
 
-class PatientRegisterRequest(BaseModel):
-    role: Literal["patient"] = "patient"
+class UserRegisterRequest(BaseModel):
+    role: Literal["user"] = "user"
     name: str = Field(min_length=1)
-    last_name: str = Field(min_length=1)
+    phone: str
+    #last_name: str = Field(min_length=1)
     email: Annotated[str, Query(pattern="^[-\w\.]+@([-\w]+\.)+[-\w]{2,4}$")]
-    birth_date: str
-    gender: str
-    blood_type: str
+    #birth_date: str
+    #gender: str
+    #blood_type: str
     password: str = Field(
         min_length=8,
         description="Must contain at least one uppercase, at least one lowercase and at least one number",

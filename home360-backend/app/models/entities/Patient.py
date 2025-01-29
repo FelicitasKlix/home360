@@ -8,7 +8,8 @@ db = firestore.client()
 class Patient:
     role: str
     name: str
-    last_name: str
+    #last_name: str
+    phone: str
     email: str
     id: str
 
@@ -16,13 +17,15 @@ class Patient:
         self,
         role: str,
         name: str,
-        last_name: str,
+        #last_name: str,
+        phone: str,
         email: str,
         id: str,
     ):
         self.role = role
         self.name = name
-        self.last_name = last_name
+        #self.last_name = last_name
+        self.phone = phone
         self.email = email
         self.id = id
 
@@ -62,7 +65,8 @@ class Patient:
             {
                 "id": self.id,
                 "first_name": self.name,
-                "last_name": self.last_name,
+                "phone": self.phone,
+                #"last_name": self.last_name,
                 "email": self.email,
             }
         )
