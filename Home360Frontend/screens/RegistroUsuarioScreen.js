@@ -3,7 +3,8 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import axios from 'axios';
 
 const RegistroUsuarioScreen = ({ navigation }) => {
-  const API_URL = "http://192.168.0.109:8080";
+  //const API_URL = "http://192.168.0.109:8080";
+  const API_URL = "https://home360-44h2.onrender.com"
   const [name, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
