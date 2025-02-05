@@ -31,7 +31,7 @@ from app.routers import (
     labs,
 )'''
 
-from app.routers import (users)
+from app.routers import (users, services)
 from app.models.entities.Auth import Auth
 
 
@@ -58,7 +58,7 @@ routers = [
     labs.router,
 ]'''
 
-routers = [users.router]
+routers = [users.router, services.router]
 
 for router in routers:
     app.include_router(router)
@@ -95,7 +95,8 @@ async def root() -> RedirectResponse:
 
     It returns the OPENAPI docs for the KMK API
     """
-    return RedirectResponse(url="/redoc", status_code=status.HTTP_303_SEE_OTHER)
+    #return RedirectResponse(url="/redoc", status_code=status.HTTP_303_SEE_OTHER)
+    return {"message": "API is working"}
 
 
 def start():
@@ -129,8 +130,8 @@ def custom_openapi():
                 "description": "Operations that handle users, like **login** and **signup**",
             },
             {
-                "name": "Specialties",
-                "description": "Operations that handle specialties",
+                "name": "Services",
+                "description": "Operations that handle services (quotation and emergencies)",
             },
             {
                 "name": "Appointments",

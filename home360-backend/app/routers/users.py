@@ -76,12 +76,12 @@ SECRET_SHARED_TOKEN = os.environ.get("SECRET_SHARED_TOKEN")
 )
 async def login_user(
     user_login_request: UserLoginRequest,
-    token=Depends(Auth.has_bearer_token),
+    #token=Depends(Auth.has_bearer_token),
 ):
     """
     Login a user.
 
-    This will allow for unauthenticated clients to log into the system.
+    This will allow for authenticated clients to log into the system.
 
     This path operation will:
 
@@ -150,7 +150,6 @@ async def register(
     """
 
     url = os.environ.get("REGISTER_URL")
-    print("Entra")
     auth_uid = None
     try:
         user = auth.get_user_by_email(register_request.email)
@@ -189,13 +188,13 @@ async def register(
         #}
         #record = Record(**record_data, id=auth_uid)
         #record.create()
-        email_type = "PATIENT_REGISTERED_ACCOUNT"
+        #email_type = "PATIENT_REGISTERED_ACCOUNT"
     elif register_request.role == "physician":
         physician = Physician(
             **register_request.model_dump(exclude_none=True), id=auth_uid
         )
         physician.create()
-        email_type = "PHYSICIAN_REGISTERED_ACCOUNT"
+        #email_type = "PHYSICIAN_REGISTERED_ACCOUNT"
     '''
     requests.post(
         "http://localhost:9000/emails/send",

@@ -4,33 +4,18 @@ import axios from 'axios';
 
 const RegistroUsuarioScreen = ({ navigation }) => {
   //const API_URL = "http://192.168.0.109:8080";
-  const API_URL = "https://home360-44h2.onrender.com"
+  //const API_URL = "https://home360-44h2.onrender.com"
+  const API_URL = "http://192.168.0.12:8080"
+  /* const API_URL = Platform.select({
+    ios: 'http://localhost:8080',
+    android: 'http://10.0.2.2:8080', // Para el emulador de Android
+    // Cuando uses Expo Go en dispositivo físico, 
+    // la URL se manejará automáticamente por el túnel
+  }); */
   const [name, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
-
-  /*const handleRegister = async () => {
-    console.log("LA CONCHA DE TU MADREEEE");
-    console.log(name);
-    console.log(email);
-    const response = await axios.post(
-        `${API_URL}/users/register`,
-        { name, phone, email, password, role: "user"}
-    );
-    console.log(response.data);
-    try {
-    const response = await axios.post(
-        `${API_URL}/users/register`,
-        { name, phone, email, password, role: "user"}
-    );
-    console.log(response.data);
-      Alert.alert('Registro exitoso', 'Tu cuenta ha sido creada.');
-      navigation.navigate('Inicio');
-    } catch (error) {
-      Alert.alert('Error', 'No se pudo completar el registro.');
-    }
-  };*/
   
   const handleRegister = async () => {
     try {
@@ -56,7 +41,7 @@ const RegistroUsuarioScreen = ({ navigation }) => {
       }
       
       Alert.alert('Registro exitoso', 'Tu cuenta ha sido creada.');
-      navigation.navigate('Inicio');
+      navigation.navigate('SuccessfulProfile');
     } catch (error) {
       console.error('Error:', error);
       Alert.alert('Error', `No se pudo completar el registro: ${error.message}`);

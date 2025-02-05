@@ -6,7 +6,7 @@ const InicioScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Bienvenido a Home360!</Text>
       <Text style={styles.subtitle}>Tu hogar pide ayuda, nosotros te mandamos héroes</Text>
-      <TouchableOpacity style={styles.buttonOutline} onPress={() => navigation.navigate('RegistroUsuario')}>
+      <TouchableOpacity style={styles.buttonOutline} onPress={() => navigation.navigate('Login')}>
         <Text style={styles.buttonTextOutline}>Ingresar</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('RegistroOpciones')}>
