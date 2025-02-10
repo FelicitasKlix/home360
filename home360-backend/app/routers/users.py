@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from app.models.entities.Auth import Auth
 from app.models.entities.Admin import Admin
 from app.models.entities.Patient import Patient
+from app.models.entities.Professional import Professional
 from app.models.entities.Physician import Physician
 from app.models.entities.Score import Score
 from app.models.entities.Appointment import Appointment
@@ -31,12 +32,14 @@ from app.models.responses.UserResponses import (
     ChangePasswordErrorResponse,
 )
 
+from app.models.responses.ProfessionalResponses import ProfessionalResponse
+
 from app.models.requests.UserRequests import (
     UserLoginRequest,
     UserRegisterRequest,
     PhysicianRegisterRequest,
     ChangePasswordRequest,
-    LaboratoryRegisterRequest
+    ProfessionalRegisterRequest
 )
 
 from app.models.responses.ScoreResponses import (
@@ -105,18 +108,32 @@ async def login_user(
             content={"detail": "Invalid email and/or password"},
         )
     elif login_response.status_code == 200:
-        if Physician.is_physician(login_response.json()["localId"]):
-            physician = Physician.get_by_id(login_response.json()["localId"])
-            if physician["approved"] == "denied" or physician["approved"] == "blocked":
+        if Professional.is_professional(user_login_request.email):
+            professional = Professional.get_professionals_by_email(user_login_request.email)
+            #print(professional[0])
+            if professional['approved'] == "denied" or professional['approved'] == "blocked" or professional['approved'] == "pending":
                 return JSONResponse(
                     status_code=status.HTTP_403_FORBIDDEN,
                     content={"detail": "Account is not approved"},
-                )
-            elif physician["approved"] == "pending":
-                return JSONResponse(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    content={"detail": "Account has to be approved by admin"},
-                )
+            )
+        #if Professional.is_professional(login_response.json()["localId"]):
+       # if not Professional.is_professional_approved_by_email(user_login_request.email):
+            #return JSONResponse(
+              #  status_code=status.HTTP_403_FORBIDDEN,
+               # content={"detail": "Account is not approved"},
+            #)
+        #if Professional.is_professional(user_login_request.email):
+         #   #physician = Physician.get_by_id(login_response.json()["localId"])
+          #  if physician["approved"] == "denied" or physician["approved"] == "blocked":
+           #     return JSONResponse(
+            #        status_code=status.HTTP_403_FORBIDDEN,
+             #       content={"detail": "Account is not approved"},
+              #  )
+            #elif physician["approved"] == "pending":
+             #   return JSONResponse(
+              #      status_code=status.HTTP_403_FORBIDDEN,
+               #     content={"detail": "Account has to be approved by admin"},
+                #)
         return {"token": login_response.json()["idToken"]}
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -136,7 +153,7 @@ async def login_user(
 )
 async def register(
     register_request: Annotated[
-        Union[UserRegisterRequest, PhysicianRegisterRequest],
+        Union[UserRegisterRequest, ProfessionalRegisterRequest],
         Body(discriminator="role"),
     ]
 ):
@@ -166,13 +183,20 @@ async def register(
                 }
             )
             auth_uid = register_response.uid
-        except:
+        except Exception as e:
+            print("[+] Firebase user creation failed:", str(e))
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content={"detail": "Internal Server Error"},
+                content={"detail": f"Error creating user: {str(e)}"},
             )
+        #except:
+            #return JSONResponse(
+             #   status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+              #  content={"detail": "Internal Server Error"},
+            #)
 
     del register_request.password
+    print(register_request.role)
     if register_request.role == "user":
         patient_data = {
             key: value
@@ -189,11 +213,12 @@ async def register(
         #record = Record(**record_data, id=auth_uid)
         #record.create()
         #email_type = "PATIENT_REGISTERED_ACCOUNT"
-    elif register_request.role == "physician":
-        physician = Physician(
+    elif register_request.role == "professional":
+        print("Creating professional with data:", register_request.model_dump(exclude_none=True))
+        professional = Professional(
             **register_request.model_dump(exclude_none=True), id=auth_uid
         )
-        physician.create()
+        professional.create()
         #email_type = "PHYSICIAN_REGISTERED_ACCOUNT"
     '''
     requests.post(
@@ -250,16 +275,17 @@ def get_user_roles(user_id=Depends(Auth.is_logged_in)):
 
 
 @router.get(
-    "/user-info",
+    "/user-info/{receiver_email}",
     status_code=status.HTTP_200_OK,
-    response_model=Union[PhysicianResponse, PatientResponse],
+    #response_model=Union[ProfessionalResponse, PatientResponse],
+    response_model=str,
     responses={
         401: {"model": UserInfoErrorResponse},
         403: {"model": UserInfoErrorResponse},
         500: {"model": UserInfoErrorResponse},
     },
 )
-def get_user_info(user_id=Depends(Auth.is_logged_in)):
+def get_user_info(receiver_email: str):
     """
     Get a user info.
 
@@ -271,10 +297,12 @@ def get_user_info(user_id=Depends(Auth.is_logged_in)):
     * Throw an error if user info retrieving process fails.
     """
     try:
-        if Patient.get_by_id(user_id):
-            return Patient.get_by_id(user_id)
-        if Physician.get_by_id(user_id):
-            return Physician.get_by_id(user_id)
+        if Professional.is_professional(receiver_email):
+            professional = Professional.get_professionals_by_email(receiver_email)
+            return professional['first_name']
+        if Patient.is_patient(receiver_email):
+            patient = Patient.get_patients_by_email(receiver_email)
+            return patient['first_name']
         else:
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,

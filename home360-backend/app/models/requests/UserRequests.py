@@ -42,6 +42,23 @@ class PhysicianRegisterRequest(BaseModel):
     tuition: str
     specialty: str
 
+
+class ProfessionalRegisterRequest(BaseModel):
+    role: Literal["professional"] = "professional"
+    name: str = Field(min_length=1)
+    #last_name: str = Field(min_length=1)
+    phone:str
+    email: Annotated[str, Query(pattern="^[-\w\.]+@([-\w]+\.)+[-\w]{2,4}$")]
+    password: str = Field(
+        min_length=8,
+        description="Must contain at least one uppercase, at least one lowercase and at least one number",
+    )
+    tuition: str
+    specialty: list
+    birth_date: str
+    zones: list
+    
+
     #@field_validator("specialty")
     #def validate_specialty(cls, specialty_to_validate):
         #if not Specialty.exists_with_name(specialty_to_validate):

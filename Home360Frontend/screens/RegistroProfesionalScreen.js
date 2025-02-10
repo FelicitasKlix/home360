@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import axios from 'axios';
 
-const RegistroUsuarioScreen = ({ navigation }) => {
+const RegistroProfesionalScreen = ({ navigation }) => {
   //const API_URL = "http://192.168.0.109:8080";
   //const API_URL = "https://home360-44h2.onrender.com"
   //const API_URL = "http://192.168.0.12:8080" //IP Depto feli
@@ -18,35 +18,20 @@ const RegistroUsuarioScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   
-  const handleRegister = async () => {
-    try {
-      const response = await fetch(`${API_URL}/users/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          name, 
-          phone, 
-          email, 
-          password, 
-          role: "user"
-        })
-      });
-      
-      const data = await response.json();
-      console.log('Respuesta:', data);
-      
-      if (!response.ok) {
-        throw new Error(data.detail || 'Error en el registro');
-      }
-      
-      Alert.alert('Registro exitoso', 'Tu cuenta ha sido creada.');
-      navigation.navigate('SuccessfulProfile');
-    } catch (error) {
-      console.error('Error:', error);
-      Alert.alert('Error', `No se pudo completar el registro: ${error.message}`);
+  const handleContinue = () => {
+    // Validaciones básicas
+    if (!name || !phone || !email || !password) {
+      Alert.alert('Error', 'Por favor completa todos los campos');
+      return;
     }
+
+    // En lugar de hacer el registro, navegamos a la siguiente pantalla con los datos
+    navigation.navigate('InformacionProfesional', {
+      name,
+      phone,
+      email,
+      password
+    });
   };
 
   return (
@@ -56,8 +41,8 @@ const RegistroUsuarioScreen = ({ navigation }) => {
       <TextInput style={styles.input} placeholder="Celular" placeholderTextColor="rgba(30, 30, 30, 0.6)" value={phone} onChangeText={setPhone} />
       <TextInput style={styles.input} placeholder="Email" placeholderTextColor="rgba(30, 30, 30, 0.6)" value={email} onChangeText={setEmail} keyboardType="email-address" />
       <TextInput style={styles.input} placeholder="Contraseña" placeholderTextColor="rgba(30, 30, 30, 0.6)" value={password} onChangeText={setPassword} secureTextEntry />
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Registrarme</Text>
+      <TouchableOpacity style={styles.button} onPress={handleContinue}>
+        <Text style={styles.buttonText}>Continuar</Text>
       </TouchableOpacity>
     </View>
   );
@@ -71,4 +56,4 @@ const styles = StyleSheet.create({
   buttonText: { color: 'white', fontSize: 18, fontFamily: 'Rethink Sans Bold' },
 });
 
-export default RegistroUsuarioScreen;
+export default RegistroProfesionalScreen;

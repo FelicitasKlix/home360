@@ -15,23 +15,9 @@ from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 
 
 load_dotenv()
-'''
-from app.routers import (
-    users,
-    appointments,
-    specialties,
-    physicians,
-    admin,
-    records,
-    genders,
-    bloodTypes,
-    analysis,
-    dashboards,
-    studies,
-    labs,
-)'''
 
-from app.routers import (users, services)
+
+from app.routers import (users, services, specialties, professionals, quotation, chat)
 from app.models.entities.Auth import Auth
 
 
@@ -42,23 +28,8 @@ app = FastAPI(docs_url=None, redoc_url=None, openapi_url="/api/openapi.json")
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"], allow_credentials=True,
 )
-'''
-routers = [
-    users.router,
-    appointments.router,
-    specialties.router,
-    physicians.router,
-    admin.router,
-    records.router,
-    genders.router,
-    bloodTypes.router,
-    analysis.router,
-    dashboards.router,
-    studies.router,
-    labs.router,
-]'''
 
-routers = [users.router, services.router]
+routers = [users.router, services.router, specialties.router, professionals.router, quotation.router, chat.router]
 
 for router in routers:
     app.include_router(router)

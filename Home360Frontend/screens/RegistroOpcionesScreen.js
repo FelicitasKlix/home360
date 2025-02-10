@@ -9,7 +9,7 @@ const RegistroOpcionesScreen = ({ navigation }) => {
       <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('RegistroUsuario')}>
         <Text style={styles.buttonText}>Quiero contratar profesionales</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.buttonOutline} onPress={() => alert('Registro de Profesionales en desarrollo')}>
+      <TouchableOpacity style={styles.buttonOutline} onPress={() => navigation.navigate('RegistroProfesional')}>
         <Text style={styles.buttonTextOutline}>Soy profesional</Text>
       </TouchableOpacity>
     </View>

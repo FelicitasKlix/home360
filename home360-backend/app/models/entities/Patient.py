@@ -34,8 +34,9 @@ class Patient:
         return db.collection("patients").document(id).get().to_dict()
 
     @staticmethod
-    def is_patient(id):
-        return db.collection("patients").document(id).get().exists
+    def is_patient(email):
+        docs = db.collection("patients").where("email", "==", email).get()
+        return len(docs) > 0
     
     @staticmethod
     def get_first_and_last_name(id):
@@ -44,6 +45,17 @@ class Patient:
     @staticmethod
     def get_email(id):
         return db.collection("patients").document(id).get().to_dict()["email"]
+    
+    @staticmethod
+    def get_by_email(email):
+        return db.collection("patients").where("email", "==", email).get()
+    
+    @staticmethod
+    def get_patients_by_email(email):
+        professionals = (
+            db.collection("patients").where("email", "==", email).get()
+        )
+        return [professional.to_dict() for professional in professionals][0]
 
     @staticmethod
     def has_pending_scores(id):
