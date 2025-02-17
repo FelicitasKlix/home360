@@ -21,6 +21,8 @@ import PedirCotizacionScreen from '../screens/PedirCotizacionScreen';
 import SuccessfulQuotationScreen from '../screens/SuccessfullQuotationScreen';
 import SolicitudesScreen from '../screens/SolicitudesScreen';
 import ChatScreen from '../screens/ChatScreen';
+import ProfessionalHomeScreen from '../screens/ProfessionalHomeScreen';
+import EmergencyRequestDetailsScreen from '../screens/EmergencyRequestDetailsScreen';
 
 const Stack = createStackNavigator();
 
@@ -48,6 +50,8 @@ export default function AppNavigator() {
         <Stack.Screen name="SuccessfulQuotation" component={SuccessfulQuotationScreen} />
         <Stack.Screen name="Solicitudes" component={SolicitudesScreen} />
         <Stack.Screen name="Chat" component={ChatScreen} />
+        <Stack.Screen name='ProfessionalHome' component={ProfessionalHomeScreen} />
+        <Stack.Screen name='EmergencyRequestDetails' component={EmergencyRequestDetailsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

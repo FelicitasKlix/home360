@@ -137,6 +137,19 @@ class Professional:
             db.collection("professionals").where("email", "==", email).get()
         )
         return [professional.to_dict() for professional in professionals][0]
+    
+    @staticmethod
+    def add_device_token(email, token):
+        docs = db.collection("patients").where("email", "==", email).stream()
+        
+        for doc in docs:  # Iteramos sobre los documentos encontrados
+            doc_ref = db.collection("patients").document(doc.id)
+            doc_ref.update({"device_token": token})
+            return
+
+        # Si no se encontró ningún documento, se podría lanzar un error o manejarlo de otra manera.
+        raise ValueError(f"No se encontró un paciente con email {email}")
+
 
     @staticmethod
     def get_professionals_denied():

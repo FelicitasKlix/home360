@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView,KeyboardAvoidingView, Platform } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-export default function ServicioExpressScreen({ navigation }) {
-  //const API_URL = "http://192.168.0.12:8080"; //IP Depto feli
-  const API_URL = "http://192.168.0.16:8080"; //IP Depto juli
+export default function ServicioExpressScreen({ route, navigation }) {
+  const {userEmail, userType} = route.params;
+  const API_URL = "http://192.168.0.11:8080";
   const [description, setProblema] = useState('');
   const [location, setDireccion] = useState('');
   const [category, setCategoria] = useState('');
@@ -22,7 +22,7 @@ export default function ServicioExpressScreen({ navigation }) {
       const data = await response.json();
       console.log('Respuesta del backend:', data);
       //alert('Servicio solicitado con éxito');
-      navigation.navigate('SearchingEmergencyService'); 
+      navigation.navigate('SearchingEmergencyService', { userEmail: userEmail, userType: userType}); 
     } catch (error) {
       console.error('Error solicitando servicio:', error);
       alert('Error al solicitar el servicio');
@@ -31,10 +31,15 @@ export default function ServicioExpressScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Home')}>
+    
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Home', { userEmail: userEmail, userType: userType})}>
         <Icon name="arrow-back" size={30} color="white" />
       </TouchableOpacity>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={{ flex: 1 }}
+      >
+        <View style={styles.inputContainer}>
       <Text style={styles.title}>Dejá una descripción de tu emergencia</Text>
       <TextInput style={styles.input} placeholder="Dejanos tu problema aquí" placeholderTextColor="#aaa" value={description} onChangeText={setProblema} />
       <TextInput style={styles.input} placeholder="¿Dónde te encontrás?" placeholderTextColor="#aaa" value={location} onChangeText={setDireccion} />
@@ -44,9 +49,9 @@ export default function ServicioExpressScreen({ navigation }) {
         <Text style={styles.buttonText}>Solicitar servicio Express</Text>
       </TouchableOpacity>
     </View>
-
+    </KeyboardAvoidingView>
     <View style={styles.tabBar}>
-        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Home', {userEmail: userEmail})}>
+        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Home', { userEmail: userEmail, userType: userType})}>
           <Icon name="home-outline" size={24} color="white" />
           <Text style={styles.tabText}>Home</Text>
         </TouchableOpacity>
@@ -70,9 +75,9 @@ export default function ServicioExpressScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#121212', width:'100%' },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#fff', marginBottom: 20, textAlign: 'center' },
-  input: { backgroundColor: '#222', color: '#fff', width: '80%', padding: 15, borderRadius: 10, marginBottom: 10 },
-  button: { backgroundColor: '#008A45', padding: 15, borderRadius: 10, width: '80%', alignItems: 'center', marginTop: 20 },
+  title: { fontSize: 24, fontWeight: 'bold', color: '#fff', marginBottom: 20, textAlign: 'center', marginTop:150 },
+  input: { backgroundColor: '#222', color: '#fff', width: '100%', padding: 15, borderRadius: 10, marginBottom: 10 },
+  button: { backgroundColor: '#008A45', padding: 15, borderRadius: 10, width: '80%', alignItems: 'center', marginTop: 20, alignSelf: 'center' },
   buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
   backButton: {
     position: 'absolute',

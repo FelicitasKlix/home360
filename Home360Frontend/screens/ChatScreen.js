@@ -3,7 +3,8 @@ import { View, Text, FlatList, TextInput, TouchableOpacity, StyleSheet, Activity
 import axios from "axios";
 import Icon from 'react-native-vector-icons/Ionicons';
 
-const API_URL = "http://192.168.0.16:8080";  // Tu backend
+//const API_URL = "http://192.168.0.16:8080";  // Tu backend
+const API_URL = "http://192.168.0.11:8080";
 
 const ChatScreen = ({ route, navigation }) => {
   const { userEmail, receiverEmail, quotationId, comonUserEmail } = route.params;

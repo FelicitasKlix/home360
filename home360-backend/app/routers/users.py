@@ -3,8 +3,9 @@ import json
 import os
 from dotenv import load_dotenv
 from typing import Union, Annotated
+import httpx
 
-from fastapi import APIRouter, status, Depends, Body
+from fastapi import APIRouter, status, Depends, Body, HTTPException
 from fastapi.responses import JSONResponse
 
 from app.models.entities.Auth import Auth
@@ -17,7 +18,7 @@ from app.models.entities.Appointment import Appointment
 from app.models.responses.PatientResponses import PatientResponse
 from app.models.responses.PhysicianResponses import PhysicianResponse
 
-from firebase_admin import firestore, auth
+from firebase_admin import firestore, auth, messaging
 
 from app.models.responses.UserResponses import (
     SuccessfulLoginResponse,
@@ -30,6 +31,7 @@ from app.models.responses.UserResponses import (
     IsLoggedInResponse,
     SuccessfullChangePasswordResponse,
     ChangePasswordErrorResponse,
+    UserTypeResponse
 )
 
 from app.models.responses.ProfessionalResponses import ProfessionalResponse
@@ -39,7 +41,14 @@ from app.models.requests.UserRequests import (
     UserRegisterRequest,
     PhysicianRegisterRequest,
     ChangePasswordRequest,
-    ProfessionalRegisterRequest
+    ProfessionalRegisterRequest,
+    DeviceTokenRequest
+)
+
+from app.models.requests.NotificationsRequests import NotificationRequest
+from app.models.responses.NotificationResponses import (
+    SuccessfullNotificationResponse,
+    ErrorNotificationResponse
 )
 
 from app.models.responses.ScoreResponses import (
@@ -66,6 +75,7 @@ with open("credentials/client.json") as fp:
     firebase_client_config = json.loads(fp.read())
 
 SECRET_SHARED_TOKEN = os.environ.get("SECRET_SHARED_TOKEN")
+EXPO_PUSH_API_URL = "https://exp.host/--/api/v2/push/send"
 
 @router.post(
     "/login",
@@ -247,7 +257,7 @@ async def register(
         500: {"model": UserProfileErrorResponse},
     },
 )
-def get_user_roles(user_id=Depends(Auth.is_logged_in)):
+def get_user_roles(user_id=Depends(Auth.is_logged_in) ):
     """
     Get a users roles.
 
@@ -267,6 +277,45 @@ def get_user_roles(user_id=Depends(Auth.is_logged_in)):
         if Physician.is_physician(user_id):
             roles.append("physician")
         return {"roles": roles}
+    except:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": "Internal server error"},
+        )
+    
+
+@router.get(
+    "/user-type/{user_email}",
+    status_code=status.HTTP_200_OK,
+    response_model=UserTypeResponse,
+    responses={
+        401: {"model": UserProfileErrorResponse},
+        403: {"model": UserProfileErrorResponse},
+        500: {"model": UserProfileErrorResponse},
+    },
+)
+def get_user_type(user_email: str):
+    """
+    Get a users roles.
+
+    This will return the users roles.
+
+    This path operation will:
+
+    * Return the users roles.
+    * Throw an error if users role retrieving process fails.
+    """
+    #roles = []
+    try:
+        #if Admin.is_admin(user_email):
+            #roles.append("admin")
+        if Patient.is_patient(user_email):
+            #roles.append("user")
+            return {"type": "user"}
+        if Professional.is_professional(user_email):
+            #roles.append("professional")
+            return {"type": "professional"}
+        #return {"roles": roles}
     except:
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -311,6 +360,55 @@ def get_user_info(receiver_email: str):
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"detail": "Internal server error"},
+        )
+    
+
+@router.post(
+    "/device-token",
+    status_code=status.HTTP_200_OK,
+    #response_model=Union[ProfessionalResponse, PatientResponse],
+    response_model=str,
+    responses={
+        401: {"model": UserInfoErrorResponse},
+        403: {"model": UserInfoErrorResponse},
+        500: {"model": UserInfoErrorResponse},
+    },
+)
+def save_device_token(device_token_request: DeviceTokenRequest,):
+    """
+    Post a device token.
+
+    This will return the status.
+
+    This path operation will:
+
+    * Return the status.
+    * Throw an error if the process fails.
+    """
+    try:
+        print("Recibido en backend:", {
+            "email": device_token_request.user_email,
+            "token": device_token_request.device_token
+        })
+        email = device_token_request.user_email
+        token = device_token_request.device_token
+
+        if Professional.is_professional(email):
+            Professional.add_device_token(email, token)
+        elif Patient.is_patient(email):
+            Patient.add_device_token(email, token)
+        else:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"detail": "Usuario no encontrado"}
+            )
+        
+        return "Token guardado correctamente"
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": f"Error interno del servidor: {str(e)}"},
         )
 
 
@@ -387,6 +485,118 @@ def change_password(
         status_code=status.HTTP_400_BAD_REQUEST,
         content={"detail": "Invalid current password"},
     )
+
+'''
+@router.post(
+    "/send-notification",
+    status_code=status.HTTP_200_OK,
+    response_model=SuccessfullNotificationResponse,
+    responses={
+        400: {"model": ErrorNotificationResponse},
+        401: {"model": ErrorNotificationResponse},
+    },
+)
+def send_push_notification(notification_request: NotificationRequest):
+    """
+    Send push notification.
+
+    This will send notifications to users by email.
+
+    This path operation will:
+
+    * Send notifications to users.
+    * Raise an error if anything fails.
+    """
+    try:
+        print(notification_request)
+        userEmail = notification_request.userEmail
+        print(userEmail)
+        # Buscar el token del usuario en Firestore
+        docs = db.collection("patients").where("email", "==", userEmail).stream()
+        token = None
+        for doc in docs:
+            token = doc.to_dict().get("device_token")
+            print(token)
+            break
+
+        if not token:
+            raise HTTPException(status_code=404, detail="No se encontró token para este usuario")
+
+        # Construir el mensaje de notificación
+        message = messaging.Message(
+            notification=messaging.Notification(
+                title="Notificación de prueba",
+                body="¡Hola! Esto es una prueba de push notification en Home360."
+            ),
+            token=token
+        )
+        print(message)
+        # Enviar la notificación
+        response = messaging.send(message)
+        print(response)
+        #return {"message": "Notificación enviada", "response": response}
+        return {"message": "Notificación enviada"}
+    except Exception as e:
+            print("Error:", str(e))
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={"detail": f"Error creating user: {str(e)}"},
+            )
+    #except Exception as e:
+        #raise HTTPException(status_code=500, detail=f"Error enviando notificación: {str(e)}")
+    
+'''
+
+async def send_expo_notification(token: str, title: str, body: str):
+    try:
+        async with httpx.AsyncClient() as client:
+            message = {
+                "to": token,
+                "sound": "default",
+                "title": title,
+                "body": body,
+                "data": { "someData": "goes here" }
+            }
+            
+            response = await client.post(EXPO_PUSH_API_URL, json=message)
+            response.raise_for_status()
+            return response.json()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post(
+    "/send-notification",
+    status_code=status.HTTP_200_OK,
+    response_model=SuccessfullNotificationResponse
+)
+async def send_push_notification(notification_request: NotificationRequest):
+    try:
+        userEmail = notification_request.userEmail
+        
+        # Buscar el token del usuario en Firestore
+        docs = db.collection("patients").where("email", "==", userEmail).stream()
+        token = None
+        for doc in docs:
+            token = doc.to_dict().get("device_token")
+            break
+            
+        if not token:
+            raise HTTPException(status_code=404, detail="No se encontró token para este usuario")
+            
+        # Enviar notificación usando Expo
+        response = await send_expo_notification(
+            token=token,
+            title="Notificación de prueba",
+            body="¡Hola! Esto es una prueba de push notification en Home360."
+        )
+        print(response)
+        return {"message": "Notificación enviada exitosamente"}
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": f"Error al enviar notificación: {str(e)}"}
+        )
 
 
 @router.post(

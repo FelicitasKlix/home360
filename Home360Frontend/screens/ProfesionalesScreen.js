@@ -6,7 +6,7 @@ export default function ProfesionalesScreen({ route, navigation }) {
   const { category, userEmail } = route.params; // Categoría seleccionada
   console.log(category);
   console.log(userEmail);
-  const API_URL = "http://192.168.0.16:8080";
+  const API_URL = "http://192.168.0.11:8080";
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

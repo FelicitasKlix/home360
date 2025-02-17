@@ -1,28 +1,48 @@
 {
   "expo": {
     "name": "Home360Frontend",
-    "slug": "Home360Frontend",
+    "slug": "home360",
     "version": "1.0.0",
+    "projectId": "2c9b9e60-453a-4414-89b0-a71425368348",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/bell_icon.png",
+          "color": "#ffffff"
+        }
+      ]
+    ],
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.felicitasklix.home360"
     },
     "android": {
+      "package": "com.felicitasklix.home360",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "useNextNotificationsApi": true,
+      "googleServicesFile": "./android/app/google-services.json"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2c9b9e60-453a-4414-89b0-a71425368348"
+      }
+    },
+    "owner": "felicitasklix"
   }
 }

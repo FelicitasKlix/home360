@@ -5,7 +5,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 const SolicitudesScreen = ({ route, navigation }) => {
   const { userEmail } = route.params;
-  const API_URL = "http://192.168.0.16:8080";
+  console.log(userEmail);
+  const API_URL = "http://192.168.0.11:8080";
   const [quotations, setQuotations] = useState({ pending: [], completed: [], rejected: [] });
   const [loading, setLoading] = useState(true);
 

@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 
-const SearchingEmergencyServiceScreen = ({ navigation }) => {
+const SearchingEmergencyServiceScreen = ({ route, navigation }) => {
   //const navigate = useNavigate();
+  const {userEmail, userType} = route.params;
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Buscando tu solución express!</Text>
       <Text style={styles.subtitle}>Tu hogar pide ayuda, nosotros te mandamos héroes</Text>
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('EmergencyServiceAccepted')}>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('EmergencyServiceAccepted', { userEmail: userEmail, userType: userType})}>
         <Text style={styles.buttonText}>Servicio aceptado!</Text>
       </TouchableOpacity>
     </View>

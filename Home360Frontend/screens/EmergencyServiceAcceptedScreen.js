@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, SafeAreaView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
-const EmergencyServiceAcceptedScreen = ({ navigation }) => {
+const EmergencyServiceAcceptedScreen = ({ route, navigation }) => {
+  const {userEmail, userType} = route.params;
 
   return (
+    <SafeAreaView style={styles.container}>
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Home')}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Home', { userEmail: userEmail, userType: userType})}>
           <Icon name="home" size={30} color="white" />
       </TouchableOpacity>
       <Text style={styles.title}>Ayuda en camino!</Text>
@@ -17,6 +19,28 @@ const EmergencyServiceAcceptedScreen = ({ navigation }) => {
         <Text style={styles.buttonText}>Chatear con el profesional</Text>
       </TouchableOpacity>
     </View>
+
+    <View style={styles.tabBar}>
+        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Home', {userEmail: userEmail})}>
+          <Icon name="home-outline" size={24} color="white" />
+          <Text style={styles.tabText}>Home</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Solicitudes', {userEmail: userEmail})}>
+          <Icon name="construct-outline" size={24} color="white" />
+          <Text style={styles.tabText}>Solicitudes</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.tabItem}>
+          <Icon name="chatbubbles-outline" size={24} color="white" />
+          <Text style={styles.tabText}>Chat</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.tabItem}>
+          <Icon name="person-outline" size={24} color="white" />
+          <Text style={styles.tabText}>Perfil</Text>
+        </TouchableOpacity>
+      </View>
+
+    </SafeAreaView>
+    
   );
 };
 
@@ -35,6 +59,22 @@ const styles = StyleSheet.create({
       top: 20,
       left: 20,
       zIndex: 1,
+    },
+    tabItem: {
+      alignItems: 'center',
+    },
+    tabText: {
+      color: 'white',
+      fontSize: 12,
+      marginTop: 4,
+    },
+    tabBar: {
+      flexDirection: 'row',
+      backgroundColor: '#008A45',
+      paddingVertical: 10,
+      paddingBottom: 25,
+      justifyContent: 'space-around',
+      width: '100%'
     },
   });
 

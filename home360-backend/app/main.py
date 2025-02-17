@@ -105,8 +105,8 @@ def custom_openapi():
                 "description": "Operations that handle services (quotation and emergencies)",
             },
             {
-                "name": "Appointments",
-                "description": "Operations that handle appointments",
+                "name": "Specialties",
+                "description": "Operations that handle specialties",
             },
             {
                 "name": "Professionals",

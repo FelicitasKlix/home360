@@ -2,7 +2,7 @@ import requests
 import json
 import os
 from dotenv import load_dotenv
-from typing import Union, Annotated
+from typing import Union, Annotated, List
 
 from fastapi import APIRouter, status, Depends, Body, HTTPException
 from fastapi.responses import JSONResponse
@@ -13,7 +13,8 @@ from firebase_admin import firestore, auth
 
 from app.models.responses.ServiceResponses import (
     SuccessfulRequestResponse,
-    RequestErrorResponse
+    RequestErrorResponse,
+    EmergencyServiceResponse
 )
 
 from app.models.requests.ServiceRequests import (
@@ -75,4 +76,30 @@ def request_emergency_service(
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"detail": "Internal server error"},
+        )
+    
+
+@router.get(
+    "/all-emergencies",
+    response_model=List[EmergencyServiceResponse],
+    responses={
+        200: {"description": "List of all emergency services"},
+        500: {"description": "Internal server error"},
+    },
+)
+def get_all_emergency_services():
+    """
+    Get all emergency service requests.
+
+    This will retrieve all emergency service requests stored in Firestore.
+    """
+    try:
+        services = Service.get_pending_services()
+        print(services)
+        return services
+    except Exception as e:
+        print(f"Error fetching emergency services: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error",
         )

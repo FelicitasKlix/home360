@@ -6,7 +6,7 @@ export default function CotizarTrabajosScreen({ route, navigation }) {
   //const API_URL = "http://192.168.1.25:8080";
   const {userEmail} = route.params;
   console.log(userEmail);
-  const API_URL = "http://192.168.0.16:8080";
+  const API_URL = "http://192.168.0.11:8080";
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

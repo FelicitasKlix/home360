@@ -51,7 +51,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 export default function CotizacionScreen({ route, navigation }) {
   //const { userEmail, professionalEmail, specialty } = route.params;
   const { professional, category, userEmail} = route.params;
-  const API_URL = "http://192.168.0.16:8080"; //IP Depto feli
+  const API_URL = "http://192.168.0.11:8080";
   const [description, setProblema] = useState('');
   const [location, setDireccion] = useState('');
 

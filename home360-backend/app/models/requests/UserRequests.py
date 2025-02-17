@@ -99,3 +99,8 @@ class ChangePasswordRequest(BaseModel):
         if not re.search(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)", password_to_validate):
             raise ValueError("Invalid password format")
         return password_to_validate
+
+
+class DeviceTokenRequest(BaseModel):
+    user_email: str
+    device_token: str

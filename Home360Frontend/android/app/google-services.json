@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "102928772616",
+    "project_id": "pid-kmk",
+    "storage_bucket": "pid-kmk.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:102928772616:android:f76a950ba23fc6232e2bbd",
+        "android_client_info": {
+          "package_name": "com.felicitasklix.home360"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAbh1BaTMOXAWpCcAcTtrkunrI6fFo9Za8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

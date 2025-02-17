@@ -40,6 +40,8 @@ class UserRolesEnum(str, Enum):
 class UserRolesResponse(BaseModel):
     roles: list[UserRolesEnum]
 
+class UserTypeResponse(BaseModel):
+    type: str
 
 class UserProfileErrorResponse(BaseModel):
     detail: str
