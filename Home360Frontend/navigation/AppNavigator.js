@@ -23,6 +23,7 @@ import SolicitudesScreen from '../screens/SolicitudesScreen';
 import ChatScreen from '../screens/ChatScreen';
 import ProfessionalHomeScreen from '../screens/ProfessionalHomeScreen';
 import EmergencyRequestDetailsScreen from '../screens/EmergencyRequestDetailsScreen';
+import EmergencyChatScreen from '../screens/EmergencyChatScreen';
 
 const Stack = createStackNavigator();
 
@@ -52,6 +53,7 @@ export default function AppNavigator() {
         <Stack.Screen name="Chat" component={ChatScreen} />
         <Stack.Screen name='ProfessionalHome' component={ProfessionalHomeScreen} />
         <Stack.Screen name='EmergencyRequestDetails' component={EmergencyRequestDetailsScreen} />
+        <Stack.Screen name='EmergencyChat' component={EmergencyChatScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

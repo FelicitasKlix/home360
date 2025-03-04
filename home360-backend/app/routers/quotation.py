@@ -5,6 +5,7 @@ from typing import Union, Annotated
 from fastapi import APIRouter, status, Depends, Body, HTTPException
 from fastapi.responses import JSONResponse
 from app.models.entities.Quotation import Quotation
+from app.models.entities.Service import Service
 from app.models.entities.Professional import Professional
 from app.models.entities.Patient import Patient
 from firebase_admin import firestore, auth
@@ -316,6 +317,7 @@ def get_quotation_details(quotationId: str):
         return quotation_data
     except HTTPException as http_exception:
         raise http_exception
+
     
 @router.post(
     "/completed/{serviceId}",

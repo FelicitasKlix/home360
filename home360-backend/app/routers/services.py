@@ -202,3 +202,49 @@ def get_active_emergency_service(userEmail: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"detail": f"Internal server error: {str(e)}"},
         )
+    
+@router.post(
+    "/completed-service/{serviceId}/{userType}",
+    status_code=status.HTTP_200_OK,
+    response_model=SuccessfulRequestResponse,
+    responses={
+        400: {"model": RequestErrorResponse},
+        404: {"model": RequestErrorResponse},
+        500: {"model": RequestErrorResponse},
+    },
+)
+def mark_work_completed(serviceId: str, userType: str):
+    doc_ref = db.collection("services").document(serviceId)
+    doc = doc_ref.get()
+
+    if not doc.exists:
+        raise HTTPException(status_code=404, detail="Servicio no encontrado")
+
+    data = doc.to_dict()
+    confirmed_by = data.get("confirmedBy", [])
+
+    if userType not in confirmed_by:
+        confirmed_by.append(userType)
+
+    if "professional" in confirmed_by and "user" in confirmed_by:
+        status = "completed"
+    else:
+        status = "pending_confirmation"
+
+    doc_ref.update({"status": status, "confirmedBy": confirmed_by})
+
+    return {"message": f"Estado actualizado a {status}"}
+
+@router.get("/status/{emergency_service_id}")
+async def get_emergency_status(emergency_service_id: str):
+    try:
+        doc = db.collection("emergency_services").document(emergency_service_id).get()
+        if doc.exists:
+            data = doc.to_dict()
+            return {
+                "completed": data.get("status") == "completed",
+                "markedBy": data.get("markedBy", [])
+            }
+        return {"completed": False, "markedBy": []}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

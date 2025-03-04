@@ -103,11 +103,12 @@ const SolicitudesScreen = ({ route, navigation }) => {
               <Text style={styles.activeServiceDescription}>{activeService.description}</Text>
               <TouchableOpacity
                 style={styles.chatButton}
-                onPress={() => navigation.navigate("Chat", {
+                onPress={() => navigation.navigate("EmergencyChat", {
                   userEmail,
                   receiverEmail: activeService.professional,
                   comonUserEmail: activeService.userEmail,
-                  quotationId: activeService.id
+                  quotationId: activeService.id,
+                  userType
                 })}
               >
                 <Text style={styles.chatButtonText}>Ir al Chat</Text>
