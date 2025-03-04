@@ -20,12 +20,7 @@ const TabBar = ({ navigation, userEmail, userType }) => {
         <Text style={styles.tabText}>Solicitudes</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity 
-        style={styles.tabItem} 
-        onPress={() => navigation.navigate('Chat')}>
-        <Icon name="chatbubbles-outline" size={24} color="white" />
-        <Text style={styles.tabText}>Chat</Text>
-      </TouchableOpacity>
+      
 
       <TouchableOpacity 
         style={styles.tabItem} 

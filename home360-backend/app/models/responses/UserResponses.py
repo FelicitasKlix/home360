@@ -48,3 +48,6 @@ class UserProfileErrorResponse(BaseModel):
 
 class UserInfoErrorResponse(BaseModel):
     detail: str
+
+class DeviceTokenRepsonse(BaseModel):
+    token: str

@@ -48,11 +48,11 @@ def get_professionals_by_specialty(specialty_name: str):
     * Throw an error if professional retrieving fails.
     """
     try:
-        specialty_normalized = unicodedata.normalize('NFKD', specialty_name).encode('ASCII', 'ignore').decode('utf-8').lower()
-        print(specialty_normalized)
-        professionals = Professional.get_by_specialty2(specialty_normalized)
+        specialty_normalized = unicodedata.normalize('NFKD', specialty_name).encode('utf-8', 'ignore').decode('utf-8').lower()
+        professionals = Professional.get_by_specialty3(specialty_normalized)
         print(professionals)
-        return {"professionals": professionals}
+        professionals_sorted = sorted(professionals, key=lambda prof: prof.get('average_score', 0), reverse=True)
+        return {"professionals": professionals_sorted}
     except:
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

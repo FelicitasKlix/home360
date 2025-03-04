@@ -43,6 +43,24 @@ class Service:
             .get()
         )
         return [service.to_dict() for service in services]
+    
+    @staticmethod
+    def get_completed_services():
+        services = (
+            db.collection("services")
+            .where("status", "==", "completed")
+            .get()
+        )
+        
+        # Agregar el campo "type": "emergency" a cada servicio
+        completed_services = []
+        for service in services:
+            service_data = service.to_dict()
+            service_data['type'] = 'emergency'  # Agregamos el campo type
+            completed_services.append(service_data)
+        
+        return completed_services
+
 
     def create(self):
         id = db.collection("services").document().id

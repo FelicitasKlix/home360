@@ -9,6 +9,7 @@ class ProfessionalResponse(BaseModel):
     email: str
     tuition: str
     zones: list
+    average_score: float
 
 
 class GetProfessionalsResponse(BaseModel):

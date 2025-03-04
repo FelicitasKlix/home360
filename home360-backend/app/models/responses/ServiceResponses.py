@@ -16,6 +16,14 @@ class EmergencyServiceResponse(BaseModel):
     category: list
     created_at: str
 
+class CompletedEmergencyServiceResponse(BaseModel):
+    id: str
+    description: str
+    location: list
+    category: list
+    created_at: str
+    type: str
+
 class ActiveServiceResponse(BaseModel):
     #message: str
     activeService: Optional[dict]

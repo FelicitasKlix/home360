@@ -93,6 +93,84 @@ class Professional:
             print(f"- {prof.get('first_name')}: {prof.get('specialty')}")
         
         return result_list
+    
+    @staticmethod
+    def get_by_specialty3(specialty_name):
+        print(f"\n=== Iniciando búsqueda de profesionales ===")
+        print(f"Especialidad buscada: '{specialty_name}'")
+        
+        # Primero, obtengamos todos los profesionales para ver qué hay en la base
+        all_professionals = (
+            db.collection("professionals")
+            .where("approved", "==", "approved")
+            .get()
+        )
+        
+        print("\nProfesionales en la base:")
+        for prof in all_professionals:
+            prof_dict = prof.to_dict()
+            print(f"""
+            Nombre: {prof_dict.get('first_name')}
+            ID: {prof_dict.get('id')}
+            Especialidad: {prof_dict.get('specialty')}
+            Tipo de especialidad: {type(prof_dict.get('specialty'))}
+            """)
+            
+        # Ahora hacemos la búsqueda específica
+        professionals = (
+            db.collection("professionals")
+            .where("approved", "==", "approved")
+            .where("specialty", "array_contains", specialty_name)
+            .get()
+        )
+        
+        result_list = []
+        
+        # Para cada profesional, obtener su puntaje promedio
+        for professional in professionals:
+            prof_data = professional.to_dict()
+            professional_email = prof_data.get('email')  # Suponiendo que el email es el campo que identifica al profesional
+            
+            # Obtener las citas y servicios que tengan este email
+            quotations = db.collection("quotations").where("professionalEmail", "==", professional_email).where("status", "==", "completed").get()
+            services = db.collection("services").where("professionalEmail", "==", professional_email).where("status", "==", "completed").get()
+            
+            # Calcular el puntaje promedio
+            total_points = 0
+            total_reviews = 0
+            
+            # Calcular puntaje de las citas
+            for quote in quotations:
+                quote_data = quote.to_dict()
+                print("QUOTE DATA")
+                review_scores = quote_data["review"]
+                if review_scores:
+                    print(review_scores['points_for_professional'])
+                    total_points += review_scores['points_for_professional']
+                    total_reviews += 1
+            
+            
+            
+            # Calcular puntaje de los servicios
+            for service in services:
+                service_data = service.to_dict()
+                review_scores = service_data["review"]
+                if review_scores:
+                    total_points += review_scores['points_for_professional']
+                    total_reviews += 1
+            
+            # Calcular el promedio
+            average_score = total_points / total_reviews if total_reviews > 0 else 0
+            
+            # Añadir el puntaje promedio al diccionario del profesional
+            prof_data['average_score'] = average_score
+            
+            result_list.append(prof_data)
+            
+            print(f"Profesional {prof_data.get('first_name')} - Puntaje promedio: {average_score}")
+        
+        return result_list
+
 
     @staticmethod
     def get_by_specialty(specialty_name):
@@ -149,7 +227,14 @@ class Professional:
 
         # Si no se encontró ningún documento, se podría lanzar un error o manejarlo de otra manera.
         raise ValueError(f"No se encontró un paciente con email {email}")
-
+    
+    @staticmethod
+    def get_device_token(email):
+        docs = db.collection("professionals").where("email", "==", email).stream()
+        
+        for doc in docs:  # Iteramos sobre los documentos encontrados
+            doc_ref = db.collection("professionals").document(doc.id)
+            return doc_ref.get().to_dict().get("device_token")
 
     @staticmethod
     def get_professionals_denied():

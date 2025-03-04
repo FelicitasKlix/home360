@@ -31,7 +31,8 @@ from app.models.responses.UserResponses import (
     IsLoggedInResponse,
     SuccessfullChangePasswordResponse,
     ChangePasswordErrorResponse,
-    UserTypeResponse
+    UserTypeResponse,
+    DeviceTokenRepsonse
 )
 
 from app.models.responses.ProfessionalResponses import ProfessionalResponse
@@ -45,7 +46,7 @@ from app.models.requests.UserRequests import (
     DeviceTokenRequest
 )
 
-from app.models.requests.NotificationsRequests import NotificationRequest
+from app.models.requests.NotificationsRequests import (NotificationRequest, ChatNotificationRequest)
 from app.models.responses.NotificationResponses import (
     SuccessfullNotificationResponse,
     ErrorNotificationResponse
@@ -411,6 +412,47 @@ def save_device_token(device_token_request: DeviceTokenRequest,):
             content={"detail": f"Error interno del servidor: {str(e)}"},
         )
 
+@router.get(
+    "/get-device-token/{user_email}",
+    status_code=status.HTTP_200_OK,
+    #response_model=Union[ProfessionalResponse, PatientResponse],
+    response_model=str,
+    responses={
+        401: {"model": DeviceTokenRepsonse},
+        403: {"model": DeviceTokenRepsonse},
+        500: {"model": DeviceTokenRepsonse},
+    },
+)
+def get_device_token(user_email: str):
+    """
+    Post a device token.
+
+    This will return the status.
+
+    This path operation will:
+
+    * Return the status.
+    * Throw an error if the process fails.
+    """
+    try:
+
+        if Professional.is_professional(user_email):
+            token = Professional.get_device_token(user_email)
+        elif Patient.is_patient(user_email):
+            token = Patient.get_device_token(user_email)
+        else:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={"detail": "Usuario no encontrado"}
+            )
+        
+        return token
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": f"Error interno del servidor: {str(e)}"},
+        )
 
 @router.get(
     "/is-logged-in", status_code=status.HTTP_200_OK, response_model=IsLoggedInResponse
@@ -571,6 +613,7 @@ async def send_expo_notification(token: str, title: str, body: str):
 )
 async def send_push_notification(notification_request: NotificationRequest):
     try:
+        print(notification_request.userEmail)
         userEmail = notification_request.userEmail
         
         # Buscar el token del usuario en Firestore
@@ -597,6 +640,51 @@ async def send_push_notification(notification_request: NotificationRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"detail": f"Error al enviar notificación: {str(e)}"}
         )
+    
+@router.post(
+    "/send-notifications",
+    status_code=status.HTTP_200_OK,
+    response_model=SuccessfullNotificationResponse
+)
+async def send_push_notifications(notification_request: ChatNotificationRequest):
+    try:
+        print(notification_request)
+        userEmail = notification_request.userEmail
+        message = notification_request.message
+        
+        # Buscar el token en la colección "patients"
+        docs = db.collection("patients").where("email", "==", userEmail).stream()
+        token = None
+        for doc in docs:
+            token = doc.to_dict().get("device_token")
+            break  # Si encuentras el token en "patients", salimos del loop
+
+        # Si no encontramos el token en "patients", buscamos en "professionals"
+        if not token:
+            docs = db.collection("professionals").where("email", "==", userEmail).stream()
+            for doc in docs:
+                token = doc.to_dict().get("device_token")
+                break  # Si encuentras el token en "professionals", salimos del loop
+
+        # Si no se encuentra el token en ninguna colección
+        if not token:
+            raise HTTPException(status_code=404, detail="No se encontró token para este usuario")
+            
+        # Enviar notificación usando Expo
+        response = await send_expo_notification(
+            token=token,
+            title="Nuevo mensaje",
+            body=message
+        )
+        print(response)
+        return {"message": "Notificación enviada exitosamente"}
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": f"Error al enviar notificación: {str(e)}"}
+        )
+
 
 
 @router.post(

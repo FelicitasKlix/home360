@@ -29,10 +29,7 @@ const EmergencyServiceAcceptedScreen = ({ route, navigation }) => {
           <Icon name="construct-outline" size={24} color="white" />
           <Text style={styles.tabText}>Solicitudes</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem}>
-          <Icon name="chatbubbles-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Chat</Text>
-        </TouchableOpacity>
+        
         <TouchableOpacity style={styles.tabItem}>
           <Icon name="person-outline" size={24} color="white" />
           <Text style={styles.tabText}>Perfil</Text>

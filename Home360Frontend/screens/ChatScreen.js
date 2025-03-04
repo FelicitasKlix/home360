@@ -15,9 +15,17 @@ import {
 } from "react-native";
 import axios from "axios";
 import Icon from 'react-native-vector-icons/Ionicons';
+import * as Notifications from "expo-notifications";
 
-//const API_URL = "http://192.168.0.16:8080";  // Tu backend
 const API_URL = "http://192.168.0.21:8080";
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 const ChatScreen = ({ route, navigation }) => {
   const { userEmail, receiverEmail, quotationId, comonUserEmail } = route.params;
@@ -33,6 +41,12 @@ const ChatScreen = ({ route, navigation }) => {
   const [amount, setAmount] = useState("");
   const [quotationData, setQuotationData] = useState(null);
   const [editModalVisible, setEditModalVisible] = useState(false);
+  const [reviewModalVisible, setReviewModalVisible] = useState(false);
+  const [userRating, setUserRating] = useState(0);
+  const [professionalRating, setProfessionalRating] = useState(0);
+  const [userReview, setUserReview] = useState("");
+  const [professionalReview, setProfessionalReview] = useState("");
+  const [receiverDeviceToken, setReceiverDeviceToken] = useState("");
   
 
   useEffect(() => {
@@ -41,6 +55,7 @@ const ChatScreen = ({ route, navigation }) => {
     fetchReceiverName();
     fetchUserType();
     fetchQuotation();
+    fetchReceiverDeviceToken();
   }, [quotationId]);
 
   const fetchUserType = async () => {
@@ -52,6 +67,16 @@ const ChatScreen = ({ route, navigation }) => {
       }
     } catch (error) {
       console.error('Error fetching user role:', error);
+    }
+  };
+
+  const fetchReceiverDeviceToken = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/users/get-device-token/${receiverEmail}`);
+      setReceiverDeviceToken(response.data); // Guardamos el token del receptor
+      
+    } catch (error) {
+      console.error("Error fetching receiver's device token:", error);
     }
   };
 
@@ -119,10 +144,43 @@ const ChatScreen = ({ route, navigation }) => {
 
       setMessages([...messages, { message: newMessage, sender: userEmail, timestamp: new Date().toISOString() }]);
       setNewMessage("");
+      if (receiverDeviceToken) {
+        //sendPushNotification(receiverDeviceToken, 'Nuevo mensaje en el chat de emergencia', messageText);
+        console.log(receiverEmail);
+        sendPushNotification(receiverEmail, newMessage);
+      }
     } catch (error) {
       console.error("Error sending message:", error);
     }
   };
+
+  const sendPushNotification = async () => {
+      try {
+        //console.log(JSON.stringify({ userEmail: receiverEmail, message: messageText }));
+        if(userEmail != receiverEmail){
+        const response = await fetch(`${API_URL}/users/send-notifications`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userEmail: receiverEmail, message: newMessage })
+        });
+        const data = await response.json();
+      }
+      if(userEmail == receiverEmail){
+        const response = await fetch(`${API_URL}/users/send-notifications`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userEmail: comonUserEmail, message: newMessage })
+        });
+        const data = await response.json();
+      }
+
+        //const data = await response.json();
+        
+      } catch (error) {
+        Alert.alert("Error", "Hubo un problema al enviar la notificación");
+        console.error(error);
+      }
+    };
 
   const openEditModal = () => {
     setDescription(quotationData.quotation[0].descripcion); // Cargar la descripción actual
@@ -154,6 +212,62 @@ const handleUpdateQuotation = async () => {
   const handleGenerateQuote = () => {
     setModalVisible(true);
   };
+
+  const handleSubmitReview2 = async () => {
+    try {
+      await axios.post(`${API_URL}/quotation/review`, {
+        quotation_id: quotationId,
+        review_for_user: userReview,
+        points_for_user: userRating,
+        review_for_professional: professionalReview,
+        points_for_professional: professionalRating,
+      });
+      Alert.alert("Reseña enviada");
+      setReviewModalVisible(false);
+    } catch (error) {
+      console.error("Error submitting review:", error);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    try {
+      const reviewData = {
+        quotation_id: quotationId,
+      };
+
+      if (userType === "user") {
+        reviewData.review_for_professional = professionalReview;
+        reviewData.points_for_professional = professionalRating;
+      } else if (userType === "professional") {
+        reviewData.review_for_user = userReview;
+        reviewData.points_for_user = userRating;
+      }
+
+      await axios.post(`${API_URL}/quotation/review`, reviewData);
+      Alert.alert("Reseña enviada");
+      setReviewModalVisible(false);
+    } catch (error) {
+      console.error("Error submitting review:", error);
+    }
+};
+
+
+  const StarRating = ({ rating, onChange }) => {
+    return (
+      <View style={{ flexDirection: "row" }}>
+        {[1, 2, 3, 4, 5].map((star) => (
+          <TouchableOpacity key={star} onPress={() => onChange(star)}>
+            <Icon
+              name={star <= rating ? "star" : "star-outline"}
+              size={30}
+              color="#FFD700"
+            />
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+  
 
   /*const submitQuote = async () => {
     if (!description.trim() || !amount.trim()) {
@@ -501,7 +615,7 @@ const renderQuotationCard = () => {
           )}
 
           {/* ✅ Botón para marcar "Trabajo Finalizado" (usuario y profesional) */}
-          {status === "pending_confirmation" && (
+          {status === "pending_confirmation" && userType === "user" && (
               <TouchableOpacity style={styles.completeButton} onPress={handleCompleteWork2}>
                   <Text style={styles.buttonText}>Confirmar Finalización</Text>
               </TouchableOpacity>
@@ -571,63 +685,92 @@ const renderEditQuotationModal = () => (
 );
 
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <TouchableOpacity 
-        style={styles.backButton} 
-        onPress={() => {
-          navigation.setParams({ userEmail, userType });
-          navigation.goBack();
-        }}
-      >
-        <Icon name="arrow-back" size={30} color="#4CAF50" />
-      </TouchableOpacity>
+return (
+  <SafeAreaView style={styles.container}>
+    <TouchableOpacity 
+      style={styles.backButton} 
+      onPress={() => {
+        navigation.setParams({ userEmail, userType });
+        navigation.goBack();
+      }}
+    >
+      <Icon name="arrow-back" size={30} color="#4CAF50" />
+    </TouchableOpacity>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={{ flex: 1 }}
-      >
-        <View style={styles.container}>
-          {/* Nombre del usuario con el que se está chateando */}
-          <View style={styles.header}>
-            {loading ? (
-              <ActivityIndicator size="small" color="white" />
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <View style={styles.container}>
+        {/* Nombre del usuario con el que se está chateando */}
+        <View style={styles.header}>
+          {loading ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <Text style={styles.headerText}>{receiverName || "Usuario"}</Text>
+          )}
+        </View>
+
+      
+       
+
+        {/* Botones de acción solo si la solicitud está en estado "pending" */}
+        {quotationId && quotationData?.status === "pending" && (
+          <View style={styles.actionButtonsContainer}>
+            {userType === "professional" ? (
+              <>
+                <TouchableOpacity 
+                  style={[styles.actionButton, styles.quoteButton]} 
+                  onPress={handleGenerateQuote}
+                >
+                  <Text style={styles.actionButtonText}>Generar presupuesto</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.actionButton, styles.declineButton]} 
+                  onPress={handleDeclineRequest}
+                >
+                  <Text style={styles.actionButtonText}>Declinar solicitud</Text>
+                </TouchableOpacity>
+              </>
             ) : (
-              <Text style={styles.headerText}>{receiverName || "Usuario"}</Text>
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.cancelButton]} 
+                onPress={handleCancelRequest}
+              >
+                <Text style={styles.actionButtonText}>Cancelar solicitud</Text>
+              </TouchableOpacity>
             )}
           </View>
+        )}
 
-          {/* Botones de acción según el tipo de usuario */}
-          {quotationId && quotationData && (
-            <View style={styles.actionButtonsContainer}>
-              {userType === "professional" ? (
-                <>
-                  <TouchableOpacity 
-                    style={[styles.actionButton, styles.quoteButton]} 
-                    onPress={handleGenerateQuote}
-                  >
-                    <Text style={styles.actionButtonText}>Generar presupuesto</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity 
-                    style={[styles.actionButton, styles.declineButton]} 
-                    onPress={handleDeclineRequest}
-                  >
-                    <Text style={styles.actionButtonText}>Declinar solicitud</Text>
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <TouchableOpacity 
-                  style={[styles.actionButton, styles.cancelButton]} 
-                  onPress={handleCancelRequest}
-                >
-                  <Text style={styles.actionButtonText}>Cancelar solicitud</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
+        {/* Botón de dejar una reseña */}
+        {quotationData && quotationData.status === "completed" && (
+          <View style={styles.actionButtonsContainer}>
+            {userType === "user" && !quotationData.review?.review_for_professional && (
+              <TouchableOpacity 
+                style={styles.reviewButton} 
+                onPress={() => setReviewModalVisible(true)}
+              >
+                <Text style={styles.reviewButtonText}>Dejar una reseña</Text>
+              </TouchableOpacity>
+            )}
 
-          {/* Quotation Card */}
-          {renderQuotationCard()}
+            {userType === "professional" && !quotationData.review?.review_for_user && (
+              <TouchableOpacity 
+                style={styles.reviewButton} 
+                onPress={() => setReviewModalVisible(true)}
+              >
+                <Text style={styles.reviewButtonText}>Dejar una reseña</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+
+
+        {/* Quotation Card */}
+        {renderQuotationCard()}
+
 
           {/* Quotation Modal */}
           {renderEditQuotationModal()}
@@ -639,7 +782,6 @@ const renderEditQuotationModal = () => (
             keyExtractor={(item, index) => index.toString()} 
             style={styles.messagesList}
           />
-          
           
           {/* Input para escribir mensajes */}
           <View style={styles.inputContainer}>
@@ -674,10 +816,7 @@ const renderEditQuotationModal = () => (
           <Icon name="construct-outline" size={24} color="white" />
           <Text style={styles.tabText}>Solicitudes</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem}>
-          <Icon name="chatbubbles-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Chat</Text>
-        </TouchableOpacity>
+       
         <TouchableOpacity style={styles.tabItem}>
           <Icon name="person-outline" size={24} color="white" />
           <Text style={styles.tabText}>Perfil</Text>
@@ -732,6 +871,72 @@ const renderEditQuotationModal = () => (
           </View>
         </View>
       </Modal>
+
+      {/* Modal de Reseña */}
+      <Modal
+  animationType="slide"
+  transparent={true}
+  visible={reviewModalVisible}
+  onRequestClose={() => setReviewModalVisible(false)}
+>
+  <View style={styles.modalOverlay}>
+    <View style={styles.modalContent}>
+      <Text style={styles.modalTitle}>Dejar una reseña</Text>
+
+      {/* Si es un usuario, solo muestra la reseña al profesional */}
+      {userType === "user" && (
+        <>
+          <Text style={styles.inputLabel}>Puntuación para el profesional:</Text>
+          <StarRating rating={professionalRating} onChange={setProfessionalRating} />
+
+          <Text style={styles.inputLabel}>Comentario para el profesional:</Text>
+          <TextInput
+            style={styles.modalInput}
+            placeholder="Escribe un comentario..."
+            value={professionalReview}
+            onChangeText={setProfessionalReview}
+            multiline={true}
+          />
+        </>
+      )}
+
+      {/* Si es un profesional, solo muestra la reseña al usuario */}
+      {userType === "professional" && (
+        <>
+          <Text style={styles.inputLabel}>Puntuación para el usuario:</Text>
+          <StarRating rating={userRating} onChange={setUserRating} />
+
+          <Text style={styles.inputLabel}>Comentario para el usuario:</Text>
+          <TextInput
+            style={styles.modalInput}
+            placeholder="Escribe un comentario..."
+            value={userReview}
+            onChangeText={setUserReview}
+            multiline={true}
+          />
+        </>
+      )}
+
+      <View style={styles.modalButtonsContainer}>
+        <TouchableOpacity
+          style={styles.modalCancelButton}
+          onPress={() => setReviewModalVisible(false)}
+        >
+          <Text style={styles.modalButtonText}>Cancelar</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.modalSubmitButton}
+          onPress={handleSubmitReview}
+        >
+          <Text style={styles.modalButtonText}>Enviar</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
+
+
     </SafeAreaView>
   );
 };
@@ -758,7 +963,6 @@ const styles = StyleSheet.create({
   actionButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 15,
     paddingHorizontal: 10,
     alignItems: 'center'
   },
@@ -1037,7 +1241,8 @@ buttonText: {
   fontWeight: 'bold',
   justifyContent: 'center'
 },
-
+reviewButton: { backgroundColor: "#008A45", padding: 10, borderRadius: 10, alignItems: "center", marginBottom: 10, width: '100%' },
+reviewButtonText: {color: 'white'}
 });
 
 export default ChatScreen;

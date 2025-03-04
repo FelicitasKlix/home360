@@ -111,10 +111,7 @@ const ProfessionalHomeScreen = ({ route, navigation }) => {
                 <Icon name="construct-outline" size={24} color="white" />
                 <Text style={styles.tabText}>Solicitudes</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.tabItem}>
-                <Icon name="chatbubbles-outline" size={24} color="white" />
-                <Text style={styles.tabText}>Chat</Text>
-              </TouchableOpacity>
+              
               <TouchableOpacity style={styles.tabItem}>
                 <Icon name="person-outline" size={24} color="white" />
                 <Text style={styles.tabText}>Perfil</Text>
@@ -138,6 +135,8 @@ const styles = StyleSheet.create({
   },
   flatList: {
     marginBottom: 10,
+    backgroundColor: '#1E1E1E',
+    borderRadius: 10
   },
   title: {
     fontSize: 44,
@@ -151,7 +150,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontFamily: "Rethink Sans ExtraBold",
     color: "#EBEBEB",
-    marginBottom: 40,
+    marginBottom: 20,
     textAlign: "center",
   },
   requestItem: {

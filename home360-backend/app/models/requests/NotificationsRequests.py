@@ -4,3 +4,7 @@ from fastapi import Query
 
 class NotificationRequest(BaseModel):
     userEmail: str
+
+class ChatNotificationRequest(BaseModel):
+    userEmail: str
+    message: str

@@ -69,6 +69,13 @@ class Patient:
         # Si no se encontró ningún documento, se podría lanzar un error o manejarlo de otra manera.
         raise ValueError(f"No se encontró un paciente con email {email}")
 
+    @staticmethod
+    def get_device_token(email):
+        docs = db.collection("patients").where("email", "==", email).stream()
+        
+        for doc in docs:  # Iteramos sobre los documentos encontrados
+            doc_ref = db.collection("patients").document(doc.id)
+            return doc_ref.get().to_dict().get("device_token")
 
     @staticmethod
     def has_pending_scores(id):

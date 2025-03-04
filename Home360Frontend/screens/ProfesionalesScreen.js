@@ -28,12 +28,12 @@ export default function ProfesionalesScreen({ route, navigation }) {
   
       const data = await response.json();
       console.log(data);
-      // Si la lista de profesionales está vacía, se muestra el mensaje de error
+      
       if (Array.isArray(data.professionals) && data.professionals.length > 0) {
         setProfessionals(data.professionals);
-        setError(null); // Limpia cualquier error anterior
+        setError(null);
       } else {
-        setProfessionals([]); // Asegura que el array esté vacío
+        setProfessionals([]); 
         setError("No se encontraron profesionales en esta categoría.");
       }
       
@@ -84,6 +84,9 @@ export default function ProfesionalesScreen({ route, navigation }) {
         <Icon name="person-circle-outline" size={60} color="gray" style={styles.avatar} />
         <View style={styles.infoContainer}>
           <Text style={styles.name}>{item.first_name}</Text>
+          <Text style={styles.zones}>
+            <Icon name="star" size={16} /> {item.average_score}
+          </Text>
           <Text style={styles.specialty}>
             <Icon name="construct-outline" size={16} /> {item.specialty?.join(' - ')}
           </Text>

@@ -11,8 +11,10 @@ const SolicitudesScreen = ({ route, navigation }) => {
   const API_URL = "http://192.168.0.21:8080";
   const [quotations, setQuotations] = useState({ pending: [], completed: [], rejected: [], in_progress: [] });
   const [loading, setLoading] = useState(true);
+  const [emergenciesLoading, setEmergenciesLoading] = useState(true);
   const [activeService, setActiveService] = useState(null);
   const [userRole, setUserType] = useState('');
+  const [completedEmergencies, setCompletedEmergencies] = useState([]);
 
   useEffect(() => {
     const fetchQuotations = async () => {
@@ -28,6 +30,23 @@ const SolicitudesScreen = ({ route, navigation }) => {
         console.error('Error fetching quotations:', error);
       } finally {
         setLoading(false);
+      }
+    };
+
+    const fetchCompleteEmergencies = async () => {
+      try {
+        setEmergenciesLoading(true);
+        const response = await fetch(`${API_URL}/services/completed-emergencies`);
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error('Error en la respuesta del servidor');
+        }
+        console.log(data);
+        setCompletedEmergencies(data);
+      } catch (error) {
+        console.error('Error fetching services:', error);
+      } finally {
+        setEmergenciesLoading(false);
       }
     };
 
@@ -58,30 +77,57 @@ const SolicitudesScreen = ({ route, navigation }) => {
     fetchQuotations();
     fetchActiveService();
     fetchUserType();
+    fetchCompleteEmergencies();
   }, [userEmail]);
 
   if (loading) {
     return <ActivityIndicator size="large" color="#00ff00" />;
   }
 
-  const renderItem = ({ item }) => (
-    <TouchableOpacity style={styles.item}
-      onPress={() => navigation.navigate("Chat", {
-        userEmail,
-        receiverEmail: item.professionalEmail,
-        comonUserEmail: item.userEmail,
-        quotationId: item.id
-      })}
-    >
-      <Text style={styles.title}>{item.category}</Text>
-      <Text style={styles.subtitle}>{item.description}</Text>
-    </TouchableOpacity>
-  );
+  const renderItem = ({ item }) => {
+    // Comprobar si el item es de tipo "emergency"
+    const isEmergency = item.type === 'emergency';
+  
+    return (
+      <TouchableOpacity
+        style={styles.item}
+        onPress={() => {
+          if (isEmergency) {
+            // Si es una emergencia, redirigir a EmergencyChat
+            navigation.navigate("EmergencyChat", {
+              userEmail,
+              receiverEmail: item.professionalEmail,
+              comonUserEmail: item.userEmail,
+              quotationId: item.id,
+              userType
+            });
+          } else {
+            // Si no es una emergencia, redirigir a Chat
+            navigation.navigate("Chat", {
+              userEmail,
+              receiverEmail: item.professionalEmail,
+              comonUserEmail: item.userEmail,
+              quotationId: item.id
+            });
+          }
+        }}
+      >
+        <Text style={styles.title}>{item.category}</Text>
+        <Text style={styles.subtitle}>{item.description}</Text>
+      </TouchableOpacity>
+    );
+  };
+  
+
+  const combinedCompletedData = [
+    ...quotations.completed, 
+    ...completedEmergencies
+  ];
   
   const data = [
     { title: 'Pendientes', data: quotations.pending },
     { title: 'En proceso', data: quotations.in_progress },
-    { title: 'Realizados', data: quotations.completed },
+    { title: 'Realizados', data: combinedCompletedData },
     { title: 'Rechazados', data: quotations.rejected }
   ];
   
@@ -93,7 +139,7 @@ const SolicitudesScreen = ({ route, navigation }) => {
           { key: 'activeService', type: 'activeService' }, // Añadimos un item dummy para la solicitud express
           { key: 'pending', type: 'pending', data: quotations.pending },
           { key: 'in_progress', type: 'in_progress', data: quotations.in_progress },
-          { key: 'completed', type: 'completed', data: quotations.completed },
+          { key: 'completed', type: 'completed', data: combinedCompletedData },
           { key: 'rejected', type: 'rejected', data: quotations.rejected }
         ]}
         ListHeaderComponent={
@@ -117,7 +163,7 @@ const SolicitudesScreen = ({ route, navigation }) => {
           )
         }
         renderItem={({ item }) => {
-          if (item.type === 'activeService') return null; // No renderizamos el dummy item
+          if (item.type === 'activeService') return null;
           return (
             <View style={styles.sectionContainer}>
               {/* Contenedor de la sección con fondo gris */}
@@ -161,10 +207,7 @@ const SolicitudesScreen = ({ route, navigation }) => {
           <Icon name="construct-outline" size={24} color="white" />
           <Text style={styles.tabText}>Solicitudes</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem}>
-          <Icon name="chatbubbles-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Chat</Text>
-        </TouchableOpacity>
+      
         <TouchableOpacity style={styles.tabItem}>
           <Icon name="person-outline" size={24} color="white" />
           <Text style={styles.tabText}>Perfil</Text>

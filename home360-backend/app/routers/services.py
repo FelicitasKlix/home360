@@ -15,7 +15,8 @@ from app.models.responses.ServiceResponses import (
     SuccessfulRequestResponse,
     RequestErrorResponse,
     EmergencyServiceResponse,
-    ActiveServiceResponse
+    ActiveServiceResponse,
+    CompletedEmergencyServiceResponse
 )
 
 from app.models.requests.ServiceRequests import (
@@ -105,6 +106,30 @@ def get_all_emergency_services():
             detail="Internal server error",
         )
     
+@router.get(
+    "/completed-emergencies",
+    response_model=List[CompletedEmergencyServiceResponse],
+    responses={
+        200: {"description": "List of completed emergency services"},
+        500: {"description": "Internal server error"},
+    },
+)
+def get_completed_emergency_services():
+    """
+    Get completed emergency service requests.
+
+    This will retrieve completed emergency service requests stored in Firestore.
+    """
+    try:
+        services = Service.get_completed_services()
+        print(services)
+        return services
+    except Exception as e:
+        print(f"Error fetching emergency services: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error",
+        )
 
 @router.post(
     "/emergency/accept",
@@ -238,7 +263,7 @@ def mark_work_completed(serviceId: str, userType: str):
 @router.get("/status/{emergency_service_id}")
 async def get_emergency_status(emergency_service_id: str):
     try:
-        doc = db.collection("emergency_services").document(emergency_service_id).get()
+        doc = db.collection("services").document(emergency_service_id).get()
         if doc.exists:
             data = doc.to_dict()
             return {
@@ -246,5 +271,33 @@ async def get_emergency_status(emergency_service_id: str):
                 "markedBy": data.get("markedBy", [])
             }
         return {"completed": False, "markedBy": []}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/review")
+async def submit_review(data: dict):
+    try:
+        service_id = data["service_id"]
+
+        # Obtener la referencia al documento
+        doc_ref = db.collection("services").document(service_id)
+        doc = doc_ref.get()
+
+        if doc.exists:
+            current_review = doc.to_dict().get("review", {})
+        else:
+            current_review = {}
+
+        # Construimos la actualización sin borrar los valores previos
+        updated_review = {
+            "review_for_user": data.get("review_for_user", current_review.get("review_for_user")),
+            "points_for_user": data.get("points_for_user", current_review.get("points_for_user")),
+            "review_for_professional": data.get("review_for_professional", current_review.get("review_for_professional")),
+            "points_for_professional": data.get("points_for_professional", current_review.get("points_for_professional")),
+        }
+
+        doc_ref.update({"review": updated_review})
+
+        return {"success": True, "message": "Review added"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

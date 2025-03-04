@@ -389,3 +389,51 @@ def mark_work_completed(serviceId: str, userType: str):
     doc_ref.update({"status": status, "confirmedBy": confirmed_by})
 
     return {"message": f"Estado actualizado a {status}"}
+
+
+@router.post("/reviewwww")
+async def submit_review(data: dict):
+    try:
+        quotation_id = data["quotation_id"]
+        review = {
+            "review_for_user": data["review_for_user"],
+            "points_for_user": data["points_for_user"],
+            "review_for_professional": data["review_for_professional"],
+            "points_for_professional": data["points_for_professional"]
+        }
+
+        doc_ref = db.collection("quotations").document(quotation_id)
+        doc_ref.update({"review": review})
+
+        return {"success": True, "message": "Review added"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/review")
+async def submit_review(data: dict):
+    try:
+        quotation_id = data["quotation_id"]
+
+        # Obtener la referencia al documento
+        doc_ref = db.collection("quotations").document(quotation_id)
+        doc = doc_ref.get()
+
+        if doc.exists:
+            current_review = doc.to_dict().get("review", {})
+        else:
+            current_review = {}
+
+        # Construimos la actualización sin borrar los valores previos
+        updated_review = {
+            "review_for_user": data.get("review_for_user", current_review.get("review_for_user")),
+            "points_for_user": data.get("points_for_user", current_review.get("points_for_user")),
+            "review_for_professional": data.get("review_for_professional", current_review.get("review_for_professional")),
+            "points_for_professional": data.get("points_for_professional", current_review.get("points_for_professional")),
+        }
+
+        doc_ref.update({"review": updated_review})
+
+        return {"success": True, "message": "Review added"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
