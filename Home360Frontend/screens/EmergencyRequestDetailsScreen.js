@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ActivityIndicator, SafeAreaView, TouchableOpaci
 import axios from "axios";
 import Icon from "react-native-vector-icons/Ionicons";
 
-const API_URL = "http://192.168.0.11:8080";
+const API_URL = "http://192.168.0.21:8080";
 
 const EmergencyRequestDetailsScreen = ({ route, navigation }) => {
   const { serviceId } = route.params;

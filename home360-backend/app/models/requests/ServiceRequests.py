@@ -5,7 +5,12 @@ from fastapi import Query
 
 
 class EmergencyServiceRequest(BaseModel):
+    userEmail: str
     description: str
-    location: str
-    category: str
+    location: list
+    category: list
     #user_id: str
+
+class AcceptServiceRequest(BaseModel):
+    serviceId: str
+    professionalEmail: str

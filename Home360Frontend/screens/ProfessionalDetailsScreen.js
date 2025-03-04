@@ -1,9 +1,11 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import TabBar from '../navigation/TabBar';
 
 export default function ProfessionalDetailsScreen({ route, navigation }) {
-  const { professional, category, userEmail } = route.params;
+  const { professional, category, userEmail, userType } = route.params;
+  console.log(">>>>>>>>>>>>>>>>>>>");
   console.log(userEmail);
 
   return (
@@ -15,7 +17,7 @@ export default function ProfessionalDetailsScreen({ route, navigation }) {
           <TouchableOpacity style={styles.backButton} 
           //onPress={() => navigation.goBack()}
           onPress={() => {
-            navigation.setParams({ userEmail: userEmail });
+            navigation.setParams({ userEmail, userType });
             navigation.goBack();
           }}
           >
@@ -57,7 +59,7 @@ export default function ProfessionalDetailsScreen({ route, navigation }) {
           </View>
 
           {/* Botón Pedir Cotización */}
-          <TouchableOpacity style={styles.quoteButton} onPress={() => {navigation.navigate('PedirCotizacion', { professional: professional, category: category, userEmail: userEmail })}}>
+          <TouchableOpacity style={styles.quoteButton} onPress={() => {navigation.navigate('PedirCotizacion', { professional: professional, category: category, userEmail, userType })}}>
             <Text style={styles.quoteButtonText}>Pedir Cotización</Text>
           </TouchableOpacity>
         </>

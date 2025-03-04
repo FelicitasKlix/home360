@@ -17,6 +17,8 @@ firebase-admin = "^6.2.0"
 python-dotenv = "^1.0.0"
 pydantic = "^2.4.2"
 httpx = "^0.28.1"
+python-socketio = "^5.12.1"
+eventlet = "^0.39.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.2"

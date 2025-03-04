@@ -29,3 +29,11 @@ class QuotationRequest(BaseModel):
         if v not in valid_statuses:
             raise ValueError(f'Status must be one of: {", ".join(valid_statuses)}')
         return v
+    
+
+class QuotationUpdateItem(BaseModel):
+    descripcion: str
+    monto: float
+
+class QuotationUpdateRequest(BaseModel):
+    quotation: List[QuotationUpdateItem]

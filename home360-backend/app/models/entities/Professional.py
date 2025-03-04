@@ -140,10 +140,10 @@ class Professional:
     
     @staticmethod
     def add_device_token(email, token):
-        docs = db.collection("patients").where("email", "==", email).stream()
+        docs = db.collection("professionals").where("email", "==", email).stream()
         
         for doc in docs:  # Iteramos sobre los documentos encontrados
-            doc_ref = db.collection("patients").document(doc.id)
+            doc_ref = db.collection("professionals").document(doc.id)
             doc_ref.update({"device_token": token})
             return
 

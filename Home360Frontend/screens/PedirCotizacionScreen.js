@@ -1,59 +1,22 @@
-/*
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-
-export default function CotizacionScreen({ route, navigation }) {
-  //const { userEmail, professionalEmail, specialty } = route.params;
-  const { professional, category} = route.params;
-  console.log(professional);
-  console.log(category);
-  const API_URL = "http://192.168.0.16:8080"; //IP Depto feli
-  const [description, setProblema] = useState('');
-  const [location, setDireccion] = useState('');
-
-  return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Icon name="arrow-back" size={30} color="white" />
-      </TouchableOpacity>
-      <Text style={styles.title}>Pedir cotización</Text>
-      <TextInput style={styles.input} placeholder="Detalla el trabajo a realizar" placeholderTextColor="#aaa" value={description} onChangeText={setProblema} />
-      <Text style={styles.subtitle}>Tu dirección</Text>
-      <TextInput style={styles.input} placeholder="¿Dónde te encontrás?" placeholderTextColor="#aaa" value={location} onChangeText={setDireccion} />
-
-      <TouchableOpacity style={styles.button}>
-        <Text style={styles.buttonText}>Enviar</Text>
-      </TouchableOpacity>
-    </View>
-  );
-}
-
-// Estilos
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#121212', paddingHorizontal: 20, paddingTop: 40 },
-  backButton: { position: 'absolute', top: 10, left: 10, zIndex: 1, marginTop: 20, marginLeft: 10 },
-  title: { fontSize: 24, fontWeight: 'bold', color: 'white', textAlign: 'center', marginBottom: 30, marginTop: 80 },
-  subtitle: { fontSize: 22, fontFamily: 'Rethink Sans ExtraBold', color: '#EBEBEB', marginBottom: 40, marginTop: 80, justifyContent: 'center', textAlign: 'center' },
-  infoContainer: { backgroundColor: '#1E1E1E', padding: 20, borderRadius: 10 },
-  label: { fontSize: 16, color: 'gray', marginTop: 10 },
-  value: { fontSize: 18, color: 'white', fontWeight: 'bold' },
-  submitButton: { backgroundColor: '#2D9135', padding: 15, borderRadius: 10, marginTop: 30, alignItems: 'center' },
-  submitButtonText: { color: 'white', fontSize: 18, fontWeight: 'bold' },
-});
-*/
-
-
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function CotizacionScreen({ route, navigation }) {
   //const { userEmail, professionalEmail, specialty } = route.params;
-  const { professional, category, userEmail} = route.params;
-  const API_URL = "http://192.168.0.11:8080";
+  const { professional, category, userEmail, userType} = route.params;
+  console.log(professional);
+  console.log(category);
+  console.log("<<<<<<<<<<<<<<<<<<<");
+  console.log(userEmail);
+  const API_URL = "http://192.168.0.21:8080";
   const [description, setProblema] = useState('');
   const [location, setDireccion] = useState('');
+  const zones = [
+    'Palermo', 'Recoleta', 'Belgrano', 'Núñez', 'Caballito',
+    'Villa Urquiza', 'Villa Devoto', 'Villa del Parque', 'Flores',
+    'Almagro', 'Boedo', 'San Telmo', 'La Boca', 'Puerto Madero'
+  ];
 
   const handleSubmit = async () => {
     try {
@@ -74,7 +37,7 @@ export default function CotizacionScreen({ route, navigation }) {
       });
 
       if (response.ok) {
-        navigation.navigate('SuccessfulQuotation', {userEmail: userEmail});
+        navigation.navigate('SuccessfulQuotation', {userEmail, userType});
       } else {
         Alert.alert('Error', 'No se pudo enviar la cotización. Por favor intenta nuevamente.');
       }
@@ -83,13 +46,21 @@ export default function CotizacionScreen({ route, navigation }) {
     }
   };
 
+  const toggleZoneSelection = (zone) => {
+    setSelectedZones(prev => 
+      prev.includes(zone) 
+        ? prev.filter(z => z !== zone)
+        : [...prev, zone]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <TouchableOpacity 
         style={styles.backButton} 
         //onPress={() => navigation.goBack()}
         onPress={() => {
-          navigation.setParams({ userEmail: userEmail });
+          navigation.setParams({ userEmail, userType });
           navigation.goBack();
         }}
       >

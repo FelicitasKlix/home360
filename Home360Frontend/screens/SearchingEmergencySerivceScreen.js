@@ -4,13 +4,15 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 const SearchingEmergencyServiceScreen = ({ route, navigation }) => {
   //const navigate = useNavigate();
   const {userEmail, userType} = route.params;
-
+  console.log("!!!!!!!!!!!!!!!!!");
+  console.log(userEmail);
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Buscando tu solución express!</Text>
       <Text style={styles.subtitle}>Tu hogar pide ayuda, nosotros te mandamos héroes</Text>
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('EmergencyServiceAccepted', { userEmail: userEmail, userType: userType})}>
-        <Text style={styles.buttonText}>Servicio aceptado!</Text>
+      <Text style={styles.subtitle}>Te notificaremos en cuanto un profesional haya aceptado tu solicitud!</Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Home', { userEmail, userType})}>
+        <Text style={styles.buttonText}>Ir al Inicio</Text>
       </TouchableOpacity>
     </View>
   );

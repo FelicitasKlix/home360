@@ -10,8 +10,8 @@ import { Platform } from 'react-native';
 
 
 const LoginScreen = ({ navigation }) => {
-  const API_URL = "http://192.168.0.11:8080";
-  const [email, setEmail] = useState("");
+  const API_URL = "http://192.168.0.21:8080";
+  const [userEmail, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [deviceToken, setDeviceToken] = useState("");
 
@@ -84,7 +84,7 @@ const LoginScreen = ({ navigation }) => {
       const response = await fetch(`${API_URL}/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: userEmail, password }),
       });
 
       const data = await response.json();
@@ -100,20 +100,20 @@ const LoginScreen = ({ navigation }) => {
       await fetch(`${API_URL}/users/device-token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_email: email, device_token: deviceToken }),
+        body: JSON.stringify({ user_email: userEmail, device_token: deviceToken }),
       });
       console.log("Enviando al backend:", {
-        user_email: email,
+        user_email: userEmail,
         device_token: deviceToken
       });
 
-      const userTypeRes = await fetch(`${API_URL}/users/user-type/${email}`);
+      const userTypeRes = await fetch(`${API_URL}/users/user-type/${userEmail}`);
       const userTypeData = await userTypeRes.json();
 
       if (userTypeData.type === "user") {
-        navigation.navigate("Home", { userEmail: email, userType: userTypeData.type, deviceToken: deviceToken });
+        navigation.navigate("Home", { userEmail, userType: userTypeData.type, deviceToken: deviceToken });
       } else if (userTypeData.type === "professional") {
-        navigation.navigate("ProfessionalHome", { userEmail: email, userType: userTypeData.type });
+        navigation.navigate("ProfessionalHome", { userEmail, userType: userTypeData.type });
       }
     } catch (error) {
       console.error("Error:", error);
@@ -156,7 +156,7 @@ const LoginScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
     <Text style={styles.title}>Ingresá a tu cuenta!</Text>
-    <TextInput style={styles.input} placeholder="Email" placeholderTextColor="rgba(30, 30, 30, 0.6)" value={email} onChangeText={setEmail} keyboardType="email-address" />
+    <TextInput style={styles.input} placeholder="Email" placeholderTextColor="rgba(30, 30, 30, 0.6)" value={userEmail} onChangeText={setEmail} keyboardType="email-address" />
     <TextInput style={styles.input} placeholder="Contraseña" placeholderTextColor="rgba(30, 30, 30, 0.6)" value={password} onChangeText={setPassword} secureTextEntry />
     <TouchableOpacity style={styles.button} onPress={handleLogin}>
       <Text style={styles.buttonText}>Iniciar sesión</Text>

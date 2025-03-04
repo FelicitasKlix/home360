@@ -1,9 +1,13 @@
 import React, { use } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import TabBar from '../navigation/TabBar';
 
 export default function SuccessfulQuotationScreen({ route, navigation }) {
-    const userEmail = route.params;
+    //const userEmail = route.params;
+    const { userEmail, userType} = route.params;
+    console.log("++++++++++++++++++++");
+    console.log(userEmail);
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
@@ -16,30 +20,13 @@ export default function SuccessfulQuotationScreen({ route, navigation }) {
 
         <TouchableOpacity 
           style={styles.button}
-          onPress={() => navigation.navigate('Home', {userEmail: userEmail})}
+          onPress={() => navigation.navigate('Home', {userEmail, userType})}
         >
           <Text style={styles.buttonText}>Ok</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.tabBar}>
-        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Home', {userEmail: userEmail})}>
-          <Icon name="home-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Solicitudes', {userEmail: userEmail})}>
-          <Icon name="construct-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Solicitudes</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem}>
-          <Icon name="chatbubbles-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Chat</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem}>
-          <Icon name="person-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Perfil</Text>
-        </TouchableOpacity>
-      </View>
+      <TabBar navigation={navigation} userEmail={userEmail} userType={userType} />
     </SafeAreaView>
   );
 }

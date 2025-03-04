@@ -6,6 +6,7 @@ db = firestore.client()
 
 
 class Service:
+    userEmail: str
     description: str
     location: list
     category: list
@@ -15,12 +16,14 @@ class Service:
 
     def __init__(
         self,
+        userEmail: str,
         description: str,
         location: list,
         category: list,
         status: str = "pending",
         #user_id: str,
     ):
+        self.userEmail = userEmail
         self.description = description
         self.location = location
         self.category = category
@@ -46,6 +49,7 @@ class Service:
         db.collection("services").document(id).set(
             {
                 "id": id,
+                "userEmail": self.userEmail,
                 "description": self.description,
                 "location": self.location,
                 "category": self.category,

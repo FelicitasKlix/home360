@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, SafeAreaView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import TabBar from '../navigation/TabBar';
 
 export default function ProfesionalesScreen({ route, navigation }) {
-  const { category, userEmail } = route.params; // Categoría seleccionada
+  const { category, userEmail, userType } = route.params; // Categoría seleccionada
+  console.log("////////////////");
   console.log(category);
   console.log(userEmail);
-  const API_URL = "http://192.168.0.11:8080";
+  const API_URL = "http://192.168.0.21:8080";
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -50,7 +52,7 @@ export default function ProfesionalesScreen({ route, navigation }) {
       <TouchableOpacity style={styles.backButton} 
       //onPress={() => navigation.goBack()}
       onPress={() => {
-        navigation.setParams({ userEmail: userEmail });
+        navigation.setParams({ userEmail, userType });
         navigation.goBack();
       }}
       >
@@ -76,7 +78,7 @@ export default function ProfesionalesScreen({ route, navigation }) {
         style={styles.card}  // Usar el mismo estilo que tenías antes
         onPress={() => {
           //navigation.navigate('ProfessionalDetails', { professional: item })
-          navigation.navigate('ProfessionalDetails', { professional: item, category: category, userEmail: userEmail })
+          navigation.navigate('ProfessionalDetails', { professional: item, category: category, userEmail, userType })
         }}
       >
         <Icon name="person-circle-outline" size={60} color="gray" style={styles.avatar} />
@@ -96,24 +98,7 @@ export default function ProfesionalesScreen({ route, navigation }) {
 
     </View>
 
-    <View style={styles.tabBar}>
-        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Home', {userEmail: userEmail})}>
-          <Icon name="home-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Solicitudes', {userEmail: userEmail})}>
-          <Icon name="construct-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Solicitudes</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem}>
-          <Icon name="chatbubbles-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Chat</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem}>
-          <Icon name="person-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Perfil</Text>
-        </TouchableOpacity>
-      </View>
+    <TabBar navigation={navigation} userEmail={userEmail} userType={userType} />
 
     </SafeAreaView>
   );

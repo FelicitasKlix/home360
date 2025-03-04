@@ -32,7 +32,7 @@ async def send_message(msg: Message):
             "sender": msg.sender,
             "receiver": msg.receiver,
             "quotation_id": msg.quotation_id,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now().isoformat()
         }
         db.collection("messages").add(message_data)
         return {"success": True, "message": "Mensaje enviado"}
@@ -41,10 +41,10 @@ async def send_message(msg: Message):
     
 
 @router.get("/{user1}/{user2}")
-async def get_chat_messages(user1: str, user2: str):
+async def get_chat_messages(user1: str, user2: str, quotation_id: str):
     try:
         chat_ref = db.collection("messages")
-        query = chat_ref.where("sender", "in", [user1, user2]).where("receiver", "in", [user1, user2])
+        query = chat_ref.where("sender", "in", [user1, user2]).where("receiver", "in", [user1, user2]).where("quotation_id", "==", quotation_id)
         messages = query.stream()
         
         chat_history = [{"id": msg.id, **msg.to_dict()} for msg in messages]

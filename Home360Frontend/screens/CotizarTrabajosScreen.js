@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, ActivityIndicator, SafeAreaView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import TabBar from '../navigation/TabBar';
 
 export default function CotizarTrabajosScreen({ route, navigation }) {
   //const API_URL = "http://192.168.1.25:8080";
-  const {userEmail} = route.params;
+  const {userEmail, userType} = route.params;
+  console.log("&&&&&&&&&&&&&&&");
   console.log(userEmail);
-  const API_URL = "http://192.168.0.11:8080";
+  const API_URL = "http://192.168.0.21:8080";
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -46,14 +48,14 @@ export default function CotizarTrabajosScreen({ route, navigation }) {
 
 
   const handleCategoryPress = (category) => {
-    navigation.navigate('Profesionales', { category: category, userEmail: userEmail });
+    navigation.navigate('Profesionales', { category: category, userEmail, userType });
   };
 
   // Renderizado condicional para el error
   if (error) {
     return (
       <View style={styles.container}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Home', {userEmail: userEmail})}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Home', {userEmail})}>
           <Icon name="arrow-back" size={30} color="white" />
         </TouchableOpacity>
         <Text style={styles.title}>Categorías</Text>
@@ -68,7 +70,7 @@ export default function CotizarTrabajosScreen({ route, navigation }) {
   return (
     <SafeAreaView style={styles.container}>
     <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Home', {userEmail: userEmail})}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.navigate('Home', {userEmail, userType})}>
         <Icon name="arrow-back" size={30} color="white" />
       </TouchableOpacity>
       <Text style={styles.title}>Categorías</Text>
@@ -91,24 +93,7 @@ export default function CotizarTrabajosScreen({ route, navigation }) {
       )}
     </View>
 
-    <View style={styles.tabBar}>
-        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Home', {userEmail: userEmail})}>
-          <Icon name="home-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Solicitudes', {userEmail: userEmail})}>
-          <Icon name="construct-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Solicitudes</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem}>
-          <Icon name="chatbubbles-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Chat</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem}>
-          <Icon name="person-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Perfil</Text>
-        </TouchableOpacity>
-      </View>
+    <TabBar navigation={navigation} userEmail={userEmail} userType={userType} />
 
     </SafeAreaView>
   );

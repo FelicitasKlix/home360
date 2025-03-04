@@ -1,99 +1,23 @@
-/*import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-
-export default function ProfessionalHomeScreen({ route, navigation }) {
-  const {userEmail, userType} = route.params;
-  console.log(userEmail);
-  return (
-    <SafeAreaView style={styles.container}>
-    <View style={styles.container}>
-      <Text style={styles.title}>Sos profesionalllll</Text>
-      
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('CotizarTrabajos', { userEmail: userEmail})}>
-        <Text style={styles.buttonText}>Cotizar Trabajos</Text>
-      </TouchableOpacity>
-      
-      <TouchableOpacity style={styles.outlineButton} onPress={() => navigation.navigate('ServicioExpress')}>
-        <Text style={styles.outlineButtonText}>Servicio Express</Text>
-      </TouchableOpacity>
-    </View>
-
-    <View style={styles.tabBar}>
-        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Home', {userEmail: userEmail})}>
-          <Icon name="home-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Solicitudes', {userEmail: userEmail})}>
-          <Icon name="construct-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Solicitudes</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem}>
-          <Icon name="chatbubbles-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Chat</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem}>
-          <Icon name="person-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Perfil</Text>
-        </TouchableOpacity>
-      </View>
-
-    </SafeAreaView>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#121212', width:'100%'},
-  title: { fontSize: 24, fontWeight: 'bold', color: '#fff', marginBottom: 30 },
-  button: { backgroundColor: '#008A45', padding: 15, borderRadius: 10, width: '80%', alignItems: 'center', marginBottom: 10, height:'20%', justifyContent: 'center', marginTop:20 },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
-  outlineButton: { borderWidth: 2, borderColor: '#008A45', padding: 15, borderRadius: 10, width: '80%', alignItems: 'center', height:'20%', justifyContent: 'center', marginTop:20 },
-  outlineButtonText: { color: '#008A45', fontSize: 16, fontWeight: 'bold' },
-  tabItem: {
-    alignItems: 'center',
-  },
-  tabText: {
-    color: 'white',
-    fontSize: 12,
-    marginTop: 4,
-  },
-  tabBar: {
-    flexDirection: 'row',
-    backgroundColor: '#008A45',
-    paddingVertical: 10,
-    paddingBottom: 25,
-    justifyContent: 'space-around',
-    width: '100%'
-  },
-});
-*/
-
-
-
-
-
-
-
-
-
-
 import React, { useState, useEffect, useCallback } from "react";
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, SafeAreaView } from "react-native";
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, SafeAreaView, Alert } from "react-native";
 import axios from "axios";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useFocusEffect } from "@react-navigation/native";
+import TabBar from "../navigation/TabBar";
 
-const API_URL = "http://192.168.0.11:8080";
+const API_URL = "http://192.168.0.21:8080";
 
 const ProfessionalHomeScreen = ({ route, navigation }) => {
   const { userEmail, userType } = route.params;
-  console.log(userEmail);
+  console.log("////////////////");
   console.log(userType);
-
+  console.log(userEmail);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [accepting, setAccepting] = useState(null); // Para manejar el estado del botón cuando se acepta una solicitud
+  const [userRole, setUserType] = useState('');
 
-  // Memorizar la función para evitar recreaciones innecesarias
+  // Obtener solicitudes de emergencia
   const fetchEmergencyRequests = useCallback(async () => {
     try {
       setLoading(true);
@@ -106,25 +30,55 @@ const ProfessionalHomeScreen = ({ route, navigation }) => {
     }
   }, []);
 
-  // useFocusEffect con la función memorizada
+  // useFocusEffect para recargar datos al entrar en la pantalla
   useFocusEffect(
     useCallback(() => {
       fetchEmergencyRequests();
     }, [fetchEmergencyRequests])
   );
 
+  // Función para aceptar un servicio
+  const acceptService = async (serviceId) => {
+    try {
+      setAccepting(serviceId); // Indicar que este botón está en proceso
+      const response = await axios.post(`${API_URL}/services/emergency/accept`, {
+        serviceId,
+        professionalEmail: userEmail, // Se envía el email del profesional que acepta
+      });
+
+      if (response.status === 200) {
+        Alert.alert("Éxito", "Servicio aceptado correctamente.");
+        fetchEmergencyRequests(); // Recargar la lista de servicios
+      } else {
+        Alert.alert("Error", "No se pudo aceptar el servicio.");
+      }
+    } catch (error) {
+      console.error("Error al aceptar servicio:", error);
+      Alert.alert("Error", "Hubo un problema al aceptar el servicio.");
+    } finally {
+      setAccepting(null); // Resetear el estado del botón
+    }
+  };
+
+  // Renderizar cada elemento de la lista
   const renderItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.requestItem}
-      onPress={() => navigation.navigate("EmergencyRequestDetails", { serviceId: item.id })}
-    >
+    <View style={styles.requestItem}>
       <Text style={styles.serviceTitle}>{item.category}</Text>
       <Text style={styles.serviceDescription}>{item.description}</Text>
       <Text style={styles.serviceDescription}>
         <Icon name="location-outline" size={16} /> {item.location}
       </Text>
       <Text style={styles.serviceDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
-    </TouchableOpacity>
+
+      {/* Botón de Aceptar */}
+      <TouchableOpacity 
+        style={[styles.acceptButton, accepting === item.id && styles.accepting]} 
+        onPress={() => acceptService(item.id)}
+        disabled={accepting === item.id}
+      >
+        <Text style={styles.acceptButtonText}>{accepting === item.id ? "Aceptando..." : "Aceptar"}</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -144,30 +98,34 @@ const ProfessionalHomeScreen = ({ route, navigation }) => {
           />
         )}
       </View>
-
+      
       {/* Menú inferior */}
       <View style={styles.tabBar}>
-        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate("ProfessionalHome", { userEmail, userType })}>
-          <Icon name="home-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Home</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate("Solicitudes", { userEmail })}>
-          <Icon name="construct-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Solicitudes</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem}>
-          <Icon name="chatbubbles-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Chat</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tabItem}>
-          <Icon name="person-outline" size={24} color="white" />
-          <Text style={styles.tabText}>Perfil</Text>
-        </TouchableOpacity>
-      </View>
+            <TouchableOpacity 
+                    style={styles.tabItem} 
+                    onPress={() => navigation.navigate('ProfessionalHome', {userEmail, userType })}>
+                    <Icon name="home-outline" size={24} color="white" />
+                    <Text style={styles.tabText}>Home</Text>
+                </TouchableOpacity>
+              <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Solicitudes', { userEmail, userType })}>
+                <Icon name="construct-outline" size={24} color="white" />
+                <Text style={styles.tabText}>Solicitudes</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.tabItem}>
+                <Icon name="chatbubbles-outline" size={24} color="white" />
+                <Text style={styles.tabText}>Chat</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.tabItem}>
+                <Icon name="person-outline" size={24} color="white" />
+                <Text style={styles.tabText}>Perfil</Text>
+              </TouchableOpacity>
+            </View>
+
     </SafeAreaView>
   );
 };
 
+// Estilos
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
@@ -217,7 +175,7 @@ const styles = StyleSheet.create({
   serviceDate: {
     color: "gray",
     fontSize: 12,
-    marginTop: 5,
+    marginBottom: 10,
     textAlign: "right",
   },
   tabItem: {
@@ -235,6 +193,20 @@ const styles = StyleSheet.create({
     paddingBottom: 25,
     justifyContent: "space-around",
     width: "100%",
+  },
+  acceptButton: {
+    backgroundColor: "#4CAF50",
+    padding: 10,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  accepting: {
+    backgroundColor: "#a5d6a7",
+  },
+  acceptButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

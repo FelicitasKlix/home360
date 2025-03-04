@@ -28,3 +28,5 @@ class QuotationStatusResponse(BaseModel):
     pending: List[QuotationResponse]
     completed: List[QuotationResponse]
     rejected: List[QuotationResponse]
+    cancelled: List[QuotationResponse]
+    in_progress: List[QuotationResponse]

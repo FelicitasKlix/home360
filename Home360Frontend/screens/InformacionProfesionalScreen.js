@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView 
 import { Picker } from '@react-native-picker/picker';
 
 const InformacionProfesionalScreen = ({ route, navigation }) => {
-  const API_URL = "http://192.168.0.11:8080";
+  const API_URL = "http://192.168.0.21:8080";
   const { name, phone, email, password } = route.params;
 
   const [tuition, setTuition] = useState('');
