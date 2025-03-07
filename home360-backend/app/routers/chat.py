@@ -2,11 +2,8 @@ import json
 import os
 from dotenv import load_dotenv
 from datetime import datetime
-from typing import Union, Annotated
-from fastapi import APIRouter, status, Depends, Body, HTTPException
-from fastapi.responses import JSONResponse
-from app.models.entities.Quotation import Quotation
-from firebase_admin import firestore, auth
+from fastapi import APIRouter, HTTPException
+from firebase_admin import firestore
 from app.models.entities.Message import Message
 from app.models.entities.EmergencyMessage import EmergencyMessage
 
@@ -49,7 +46,7 @@ async def get_chat_messages(user1: str, user2: str, quotation_id: str):
         messages = query.stream()
         
         chat_history = [{"id": msg.id, **msg.to_dict()} for msg in messages]
-        chat_history.sort(key=lambda x: x["timestamp"])  # Ordenar por tiempo
+        chat_history.sort(key=lambda x: x["timestamp"])
 
         return {"success": True, "messages": chat_history}
     except Exception as e:
@@ -71,6 +68,7 @@ async def send_emergency_message(msg: EmergencyMessage):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
+
 @router.get("/emergency/{user1}/{user2}")
 async def get_emergency_chat_messages(user1: str, user2: str, emergency_service_id: str):
     try:
@@ -83,7 +81,7 @@ async def get_emergency_chat_messages(user1: str, user2: str, emergency_service_
         messages = query.stream()
         
         chat_history = [{"id": msg.id, **msg.to_dict()} for msg in messages]
-        chat_history.sort(key=lambda x: x["timestamp"])  # Ordenar por tiempo
+        chat_history.sort(key=lambda x: x["timestamp"])
 
         return {"success": True, "messages": chat_history}
     except Exception as e:

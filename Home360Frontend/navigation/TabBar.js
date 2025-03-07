@@ -22,12 +22,17 @@ const TabBar = ({ navigation, userEmail, userType }) => {
 
       
 
-      <TouchableOpacity 
-        style={styles.tabItem} 
-        onPress={() => navigation.navigate('Perfil')}>
-        <Icon name="person-outline" size={24} color="white" />
-        <Text style={styles.tabText}>Perfil</Text>
-      </TouchableOpacity>
+      <TouchableOpacity style={styles.tabItem}
+              onPress={() => {
+                if (userType === 'professional') {
+                  navigation.navigate('ProfessionalProfile', { userEmail, userType });
+                } else {
+                  navigation.navigate('UserProfile', { userEmail, userType });
+                }
+              }}>
+                <Icon name="person-outline" size={24} color="white" />
+                <Text style={styles.tabText}>Perfil</Text>
+              </TouchableOpacity>
     </View>
   );
 };

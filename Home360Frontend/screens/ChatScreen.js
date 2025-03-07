@@ -29,8 +29,6 @@ Notifications.setNotificationHandler({
 
 const ChatScreen = ({ route, navigation }) => {
   const { userEmail, receiverEmail, quotationId, comonUserEmail } = route.params;
-  console.log(comonUserEmail);
-  console.log("Received quotationId:", quotationId); 
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [receiverName, setReceiverName] = useState("");
@@ -50,7 +48,6 @@ const ChatScreen = ({ route, navigation }) => {
   
 
   useEffect(() => {
-    console.log("Quotation ID changed:", quotationId); 
     fetchMessages();
     fetchReceiverName();
     fetchUserType();
@@ -73,7 +70,7 @@ const ChatScreen = ({ route, navigation }) => {
   const fetchReceiverDeviceToken = async () => {
     try {
       const response = await axios.get(`${API_URL}/users/get-device-token/${receiverEmail}`);
-      setReceiverDeviceToken(response.data); // Guardamos el token del receptor
+      setReceiverDeviceToken(response.data);
       
     } catch (error) {
       console.error("Error fetching receiver's device token:", error);
@@ -84,11 +81,8 @@ const ChatScreen = ({ route, navigation }) => {
     if (!quotationId) return;
     
     try {
-      console.log("Fetching quotation for ID:", quotationId);
       const response = await axios.get(`${API_URL}/quotation/details/${quotationId}`);
       if (response.data) {
-        console.log("------------------------------");
-        console.log(response.data);
         setQuotationData(response.data);
       }
     } catch (error) {
@@ -99,13 +93,10 @@ const ChatScreen = ({ route, navigation }) => {
   const fetchMessages = async () => {
     try {
       if(userEmail != receiverEmail){
-        //const response = await axios.get(`${API_URL}/chat/${userEmail}/${receiverEmail}`);
         const response = await axios.get(`${API_URL}/chat/${userEmail}/${receiverEmail}?quotation_id=${quotationId}`);
-        //console.log(response.data.messages);
         setMessages(response.data.messages);
       }
       if(userEmail == receiverEmail){
-        //const response = await axios.get(`${API_URL}/chat/${userEmail}/${comonUserEmail}`);
         const response = await axios.get(`${API_URL}/chat/${userEmail}/${comonUserEmail}?quotation_id=${quotationId}`);
         setMessages(response.data.messages);
       }  
@@ -145,8 +136,6 @@ const ChatScreen = ({ route, navigation }) => {
       setMessages([...messages, { message: newMessage, sender: userEmail, timestamp: new Date().toISOString() }]);
       setNewMessage("");
       if (receiverDeviceToken) {
-        //sendPushNotification(receiverDeviceToken, 'Nuevo mensaje en el chat de emergencia', messageText);
-        console.log(receiverEmail);
         sendPushNotification(receiverEmail, newMessage);
       }
     } catch (error) {
@@ -156,7 +145,6 @@ const ChatScreen = ({ route, navigation }) => {
 
   const sendPushNotification = async () => {
       try {
-        //console.log(JSON.stringify({ userEmail: receiverEmail, message: messageText }));
         if(userEmail != receiverEmail){
         const response = await fetch(`${API_URL}/users/send-notifications`, {
           method: 'POST',
@@ -173,8 +161,6 @@ const ChatScreen = ({ route, navigation }) => {
         });
         const data = await response.json();
       }
-
-        //const data = await response.json();
         
       } catch (error) {
         Alert.alert("Error", "Hubo un problema al enviar la notificación");
@@ -183,8 +169,8 @@ const ChatScreen = ({ route, navigation }) => {
     };
 
   const openEditModal = () => {
-    setDescription(quotationData.quotation[0].descripcion); // Cargar la descripción actual
-    setAmount(quotationData.quotation[0].monto.toString()); // Cargar el monto actual
+    setDescription(quotationData.quotation[0].descripcion);
+    setAmount(quotationData.quotation[0].monto.toString());
     setEditModalVisible(true);
 };
 
@@ -202,8 +188,8 @@ const handleUpdateQuotation = async () => {
           ]
       });
 
-      setEditModalVisible(false); // Cerrar modal tras éxito
-      fetchQuotation(); // Refrescar los datos actualizados
+      setEditModalVisible(false);
+      fetchQuotation();
   } catch (error) {
       console.error("Error updating quotation:", error);
   }
@@ -269,41 +255,6 @@ const handleUpdateQuotation = async () => {
   };
   
 
-  /*const submitQuote = async () => {
-    if (!description.trim() || !amount.trim()) {
-      Alert.alert("Error", "Por favor completa todos los campos");
-      return;
-    }
-
-    try {
-      const response = await axios.post(`${API_URL}/quotation/update/${quotationId}`, {
-        quotation: [
-          {
-            descripcion: description,
-            monto: parseFloat(amount)
-          }
-        ]
-      });
-
-      Alert.alert(
-        "Éxito", 
-        "El presupuesto ha sido enviado correctamente",
-        [
-          { text: "OK", onPress: () => setModalVisible(false) }
-        ]
-      );
-      
-      setDescription("");
-      setAmount("");
-      
-      // Refresh messages
-      fetchMessages();
-    } catch (error) {
-      console.error("Error sending quote:", error);
-      Alert.alert("Error", "No se pudo enviar el presupuesto");
-    }
-  };*/
-
   const submitQuote = async () => {
     if (!description.trim() || !amount.trim()) {
       Alert.alert("Error", "Por favor completa todos los campos");
@@ -320,9 +271,8 @@ const handleUpdateQuotation = async () => {
         ]
       });
 
-      // Send a system message to notify about the quote
       await axios.post(`${API_URL}/chat/send`, {
-        message: "QUOTATION_SUBMITTED",  // Special message type that will be handled specially
+        message: "QUOTATION_SUBMITTED",
         sender: userEmail,
         receiver: receiverEmail,
         quotation_id: quotationId,
@@ -339,7 +289,6 @@ const handleUpdateQuotation = async () => {
       setDescription("");
       setAmount("");
       
-      // Refresh messages and quotation data
       fetchMessages();
       fetchQuotation();
     } catch (error) {
@@ -363,7 +312,6 @@ const handleUpdateQuotation = async () => {
             try {
               await axios.post(`${API_URL}/quotation/accept/${quotationId}`);
               
-              // Send a system message about accepting the quote
               await axios.post(`${API_URL}/chat/send`, {
                 message: "QUOTATION_ACCEPTED",
                 sender: userEmail,
@@ -399,7 +347,6 @@ const handleUpdateQuotation = async () => {
             try {
               await axios.post(`${API_URL}/quotation/reject/${quotationId}`);
               
-              // Send a system message about rejecting the quote
               await axios.post(`${API_URL}/chat/send`, {
                 message: "QUOTATION_REJECTED",
                 sender: userEmail,
@@ -474,12 +421,6 @@ const handleUpdateQuotation = async () => {
     );
   };
 
-  /*const renderItem = ({ item }) => (
-    <View style={[styles.messageContainer, item.sender === userEmail ? styles.sentMessage : styles.receivedMessage]}>
-      <Text style={styles.messageText}>{item.message}</Text>
-      <Text style={styles.timestamp}>{new Date(item.timestamp).toLocaleTimeString()}</Text>
-    </View>
-  );*/
 
   const formatTimestamp = (timestamp) => {
     const date = new Date(timestamp);
@@ -492,7 +433,6 @@ const handleUpdateQuotation = async () => {
     return `${day}/${month}/${year} - ${hours}:${minutes}`;
   };
   const renderItem = ({ item }) => {
-    // For special message types
     if (item.message === "QUOTATION_SUBMITTED" || 
         item.message === "QUOTATION_ACCEPTED" || 
         item.message === "QUOTATION_REJECTED") {
@@ -518,7 +458,6 @@ const handleUpdateQuotation = async () => {
       );
     }
     
-    // Regular message
     return (
       <View style={[styles.messageContainer, item.sender === userEmail ? styles.sentMessage : styles.receivedMessage]}>
         <Text style={styles.messageText}>{item.message}</Text>
@@ -541,7 +480,6 @@ const handleUpdateQuotation = async () => {
         }
 
         alert("Trabajo marcado como finalizado");
-        // Aquí podrías actualizar el estado local o recargar datos si es necesario
     } catch (error) {
         console.error("Error:", error);
         alert("Hubo un problema al completar el trabajo");
@@ -587,7 +525,7 @@ const renderQuotationCard = () => {
               <Text style={styles.quotationValue}>${monto.toFixed(2)}</Text>
           </View>
 
-          {/* ✅ Botones Aceptar y Rechazar (solo usuario) */}
+          {/* Botones Aceptar y Rechazar (solo usuario) */}
           {status === "pending" && userType === "user" && (
               <View style={styles.buttonContainer}>
                   <TouchableOpacity style={styles.acceptButton} onPress={handleAcceptQuotation}>
@@ -600,28 +538,28 @@ const renderQuotationCard = () => {
               </View>
           )}
 
-          {/* ✅ Botón para Modificar Cotización (solo profesional) */}
+          {/* Botón para Modificar Cotización (solo profesional) */}
           {status === "pending" && userType === "professional" && (
               <TouchableOpacity style={styles.modifyButton} onPress={openEditModal}>
                   <Text style={styles.buttonText}>Modificar</Text>
               </TouchableOpacity>
           )}
 
-          {/* ✅ Botón para marcar "Trabajo en curso" (solo profesional) */}
+          {/* Botón para marcar "Trabajo en curso" (solo profesional) */}
           {status === "in progress" && userType === "professional" && (
               <TouchableOpacity style={styles.completeButton} onPress={handleCompleteWork2}>
                   <Text style={styles.buttonText}>Trabajo Finalizado</Text>
               </TouchableOpacity>
           )}
 
-          {/* ✅ Botón para marcar "Trabajo Finalizado" (usuario y profesional) */}
+          {/* Botón para marcar "Trabajo Finalizado" (usuario y profesional) */}
           {status === "pending_confirmation" && userType === "user" && (
               <TouchableOpacity style={styles.completeButton} onPress={handleCompleteWork2}>
                   <Text style={styles.buttonText}>Confirmar Finalización</Text>
               </TouchableOpacity>
           )}
 
-          {/* ✅ Estado "Completado" (sin botones) */}
+          {/* Estado "Completado" (sin botones) */}
           {status === "completed" && (
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               <Icon name="checkbox-outline" size={20} color="#008A45" style={{ marginRight: 8 }} />
@@ -711,9 +649,6 @@ return (
           )}
         </View>
 
-      
-       
-
         {/* Botones de acción solo si la solicitud está en estado "pending" */}
         {quotationId && quotationData?.status === "pending" && (
           <View style={styles.actionButtonsContainer}>
@@ -767,10 +702,8 @@ return (
         )}
 
 
-
         {/* Quotation Card */}
         {renderQuotationCard()}
-
 
           {/* Quotation Modal */}
           {renderEditQuotationModal()}
@@ -1200,14 +1133,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   modifyButton: {
-    backgroundColor: "#FFA500", // Naranja
+    backgroundColor: "#FFA500",
     padding: 10,
     borderRadius: 5,
     alignItems: "center",
     marginBottom:10
 },
 completeButton: {
-  backgroundColor: "#28a745",  // Verde para indicar que está finalizado
+  backgroundColor: "#28a745",
   padding: 12,
   borderRadius: 8,
   alignItems: "center",
@@ -1216,23 +1149,23 @@ completeButton: {
 },
 buttonContainer: {
   flexDirection: 'row',
-  justifyContent: 'space-between', // Alinea los botones a los extremos
+  justifyContent: 'space-between',
 },
 
 acceptButton: {
-  backgroundColor: '#4CAF50', // Verde para aceptar
+  backgroundColor: '#4CAF50',
   padding: 10,
   borderRadius: 5,
-  flex: 1, // Hace que ambos botones ocupen el mismo espacio
-  marginRight: 10, // Añade espacio entre los botones
+  flex: 1,
+  marginRight: 10,
   alignItems: 'center',
 },
 
 rejectButton: {
-  backgroundColor: '#F44336', // Rojo para rechazar
+  backgroundColor: '#F44336',
   padding: 10,
   borderRadius: 5,
-  flex: 1, // Hace que ambos botones ocupen el mismo espacio
+  flex: 1,
   alignItems: 'center',
 },
 buttonText: {

@@ -6,8 +6,6 @@ import TabBar from '../navigation/TabBar';
 
 const SolicitudesScreen = ({ route, navigation }) => {
   const { userEmail, userType } = route.params;
-  console.log(userEmail);
-  console.log(userType);
   const API_URL = "http://192.168.0.21:8080";
   const [quotations, setQuotations] = useState({ pending: [], completed: [], rejected: [], in_progress: [] });
   const [loading, setLoading] = useState(true);
@@ -41,7 +39,6 @@ const SolicitudesScreen = ({ route, navigation }) => {
         if (!response.ok) {
           throw new Error('Error en la respuesta del servidor');
         }
-        console.log(data);
         setCompletedEmergencies(data);
       } catch (error) {
         console.error('Error fetching services:', error);
@@ -85,7 +82,6 @@ const SolicitudesScreen = ({ route, navigation }) => {
   }
 
   const renderItem = ({ item }) => {
-    // Comprobar si el item es de tipo "emergency"
     const isEmergency = item.type === 'emergency';
   
     return (
@@ -93,7 +89,6 @@ const SolicitudesScreen = ({ route, navigation }) => {
         style={styles.item}
         onPress={() => {
           if (isEmergency) {
-            // Si es una emergencia, redirigir a EmergencyChat
             navigation.navigate("EmergencyChat", {
               userEmail,
               receiverEmail: item.professionalEmail,
@@ -102,7 +97,6 @@ const SolicitudesScreen = ({ route, navigation }) => {
               userType
             });
           } else {
-            // Si no es una emergencia, redirigir a Chat
             navigation.navigate("Chat", {
               userEmail,
               receiverEmail: item.professionalEmail,
@@ -136,7 +130,7 @@ const SolicitudesScreen = ({ route, navigation }) => {
       <Text style={styles.header}>Solicitudes</Text>
       <FlatList
         data={[
-          { key: 'activeService', type: 'activeService' }, // Añadimos un item dummy para la solicitud express
+          { key: 'activeService', type: 'activeService' },
           { key: 'pending', type: 'pending', data: quotations.pending },
           { key: 'in_progress', type: 'in_progress', data: quotations.in_progress },
           { key: 'completed', type: 'completed', data: combinedCompletedData },
@@ -185,7 +179,7 @@ const SolicitudesScreen = ({ route, navigation }) => {
           );
         }}
         keyExtractor={item => item.key}
-        ListFooterComponent={<View style={{ height: 80 }} />} // Espacio para la TabBar
+        ListFooterComponent={<View style={{ height: 80 }} />}
       />
       
       {/* TabBar */}
@@ -208,7 +202,14 @@ const SolicitudesScreen = ({ route, navigation }) => {
           <Text style={styles.tabText}>Solicitudes</Text>
         </TouchableOpacity>
       
-        <TouchableOpacity style={styles.tabItem}>
+        <TouchableOpacity style={styles.tabItem}
+        onPress={() => {
+          if (userRole === 'professional') {
+            navigation.navigate('ProfessionalProfile', { userEmail, userType });
+          } else {
+            navigation.navigate('UserProfile', { userEmail, userType });
+          }
+        }}>
           <Icon name="person-outline" size={24} color="white" />
           <Text style={styles.tabText}>Perfil</Text>
         </TouchableOpacity>
@@ -232,19 +233,19 @@ const styles = StyleSheet.create({
     marginTop: 80 
   },
   sectionTitleContainer: {
-    width: '90%', // Asegura que el título tenga el mismo ancho que las cards
-    alignSelf: 'center', // Centra el contenedor
-    backgroundColor: '#333', // Gris de fondo para la sección
+    width: '90%',
+    alignSelf: 'center',
+    backgroundColor: '#333',
     paddingVertical: 5,
     paddingHorizontal: 10,
     borderRadius: 5,
-    marginTop: 10, // Espaciado para separar de los items
+    marginTop: 10,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
     color: 'white',
-    textAlign: 'left', // Alineación a la izquierda
+    textAlign: 'left',
   },
   sectionContainer: {width: '100%'},
   item: { 

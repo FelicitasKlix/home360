@@ -2,10 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 
 const SearchingEmergencyServiceScreen = ({ route, navigation }) => {
-  //const navigate = useNavigate();
   const {userEmail, userType} = route.params;
-  console.log("!!!!!!!!!!!!!!!!!");
-  console.log(userEmail);
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Buscando tu solución express!</Text>

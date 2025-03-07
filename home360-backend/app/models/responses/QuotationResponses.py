@@ -8,12 +8,6 @@ class SuccessfulRequestResponse(BaseModel):
 class RequestErrorResponse(BaseModel):
     detail: str
 
-#class QuotationStatus(str, Enum):
- #   PENDING = "pending"
-  #  ACCEPTED = "accepted"
-   # REJECTED = "rejected"
-    #COMPLETED = "completed"
-
 class QuotationResponse(BaseModel):
     id: str
     professionalEmail: str

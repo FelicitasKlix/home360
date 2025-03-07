@@ -15,9 +15,6 @@ class UserRegisterRequest(BaseModel):
     phone: str
     #last_name: str = Field(min_length=1)
     email: Annotated[str, Query(pattern="^[-\w\.]+@([-\w]+\.)+[-\w]{2,4}$")]
-    #birth_date: str
-    #gender: str
-    #blood_type: str
     password: str = Field(
         min_length=8,
         description="Must contain at least one uppercase, at least one lowercase and at least one number",
@@ -59,12 +56,6 @@ class ProfessionalRegisterRequest(BaseModel):
     zones: list
     
 
-    #@field_validator("specialty")
-    #def validate_specialty(cls, specialty_to_validate):
-        #if not Specialty.exists_with_name(specialty_to_validate):
-            #raise ValueError("Specilaty doesnt exist")
-        #return specialty_to_validate
-
     @field_validator("password")
     def validate_password(cls, password_to_validate):
         if not re.search(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)", password_to_validate):
@@ -86,8 +77,9 @@ class LaboratoryRegisterRequest(BaseModel):
         if not re.search(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)", password_to_validate):
             raise ValueError("Invalid password format")
         return password_to_validate
-
+    
 class ChangePasswordRequest(BaseModel):
+    email: str
     current_password: str
     new_password: str = Field(
         min_length=8,

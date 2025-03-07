@@ -3,20 +3,10 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, SafeAreaView } fro
 import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function CotizacionScreen({ route, navigation }) {
-  //const { userEmail, professionalEmail, specialty } = route.params;
   const { professional, category, userEmail, userType} = route.params;
-  console.log(professional);
-  console.log(category);
-  console.log("<<<<<<<<<<<<<<<<<<<");
-  console.log(userEmail);
   const API_URL = "http://192.168.0.21:8080";
   const [description, setProblema] = useState('');
   const [location, setDireccion] = useState('');
-  const zones = [
-    'Palermo', 'Recoleta', 'Belgrano', 'Núñez', 'Caballito',
-    'Villa Urquiza', 'Villa Devoto', 'Villa del Parque', 'Flores',
-    'Almagro', 'Boedo', 'San Telmo', 'La Boca', 'Puerto Madero'
-  ];
 
   const handleSubmit = async () => {
     try {
@@ -31,7 +21,7 @@ export default function CotizacionScreen({ route, navigation }) {
           category: category,
           description: description,
           direccion: location,
-          id: Date.now().toString(), // Generating a temporary ID
+          id: Date.now().toString(),
           status: 'pending'
         }),
       });
@@ -46,19 +36,10 @@ export default function CotizacionScreen({ route, navigation }) {
     }
   };
 
-  const toggleZoneSelection = (zone) => {
-    setSelectedZones(prev => 
-      prev.includes(zone) 
-        ? prev.filter(z => z !== zone)
-        : [...prev, zone]
-    );
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <TouchableOpacity 
         style={styles.backButton} 
-        //onPress={() => navigation.goBack()}
         onPress={() => {
           navigation.setParams({ userEmail, userType });
           navigation.goBack();

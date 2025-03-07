@@ -12,7 +12,6 @@ class Service:
     category: list
     created_at: str
     status: str
-    #user_id: str
 
     def __init__(
         self,
@@ -21,7 +20,6 @@ class Service:
         location: list,
         category: list,
         status: str = "pending",
-        #user_id: str,
     ):
         self.userEmail = userEmail
         self.description = description
@@ -29,7 +27,6 @@ class Service:
         self.category = category
         self.status = status
         self.created_at = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        #self.user_id = user_id
 
     @staticmethod
     def get_by_id(id):
@@ -52,15 +49,18 @@ class Service:
             .get()
         )
         
-        # Agregar el campo "type": "emergency" a cada servicio
         completed_services = []
         for service in services:
             service_data = service.to_dict()
-            service_data['type'] = 'emergency'  # Agregamos el campo type
+            service_data['type'] = 'emergency'
             completed_services.append(service_data)
         
         return completed_services
 
+    @staticmethod
+    def get_user_from_service(service_id):
+        service = db.collection("services").document(service_id).get()
+        return service.to_dict().get("userEmail")
 
     def create(self):
         id = db.collection("services").document().id
@@ -73,6 +73,5 @@ class Service:
                 "category": self.category,
                 "status": self.status,
                 "created_at": self.created_at
-                #"user_id": self.user_id
             }
         )

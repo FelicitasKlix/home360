@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 
 const SuccessfulProfileScreen = ({ navigation }) => {
-  //const navigate = useNavigate();
 
   return (
     <View style={styles.container}>

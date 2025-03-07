@@ -1,14 +1,13 @@
 import json
 import os
 from dotenv import load_dotenv
-from typing import Union, Annotated
-from fastapi import APIRouter, status, Depends, Body, HTTPException
+from fastapi import APIRouter, status, HTTPException
 from fastapi.responses import JSONResponse
 from app.models.entities.Quotation import Quotation
-from app.models.entities.Service import Service
 from app.models.entities.Professional import Professional
 from app.models.entities.Patient import Patient
-from firebase_admin import firestore, auth
+from app.models.entities.User import User
+from firebase_admin import firestore
 from app.models.responses.QuotationResponses import (
     SuccessfulRequestResponse,
     RequestErrorResponse,
@@ -45,8 +44,7 @@ SECRET_SHARED_TOKEN = os.environ.get("SECRET_SHARED_TOKEN")
     },
 )
 def create_quotation(
-    quotation_request: QuotationRequest,
-    #uid=Depends(Auth.is_logged_in),
+    quotation_request: QuotationRequest
 ):
     """
     Creates a new quotation request.
@@ -61,7 +59,6 @@ def create_quotation(
     )
     
     try:
-        print(quotation)
         quotation.create()
         return {"message": "Quotation created successfully"}
     except HTTPException as http_exception:
@@ -94,12 +91,13 @@ def get_quotations(userEmail: str):
     * Return a success message or raise an error if something fails
     """
     try:
-        print(userEmail)
         if Professional.is_professional(userEmail):
             quotations = Quotation.get_by_professional_email(userEmail)
         if Patient.is_patient(userEmail):
             quotations = Quotation.get_by_user_email(userEmail)
-        print(quotations)
+        #if User.is_user(userEmail):
+            #quotations = Quotation.get_by_user_email(userEmail)
+        
         response_data = {
             "pending": [],
             "completed": [],
@@ -152,7 +150,7 @@ def update_quotation(
     * Return a success message or raise an error if something fails
     """
     try:
-        # Check if quotation exists
+        
         quotation_doc = db.collection("quotations").document(serviceId).get()
         if not quotation_doc.exists:
             return HTTPException(
@@ -160,10 +158,8 @@ def update_quotation(
                 detail="Quotation not found"
             )
         
-        # Update the quotation with the pricing information
         db.collection("quotations").document(serviceId).update({
             "quotation": [item.dict() for item in quotation_update.quotation],
-            #"status": "in progress"  # Change status to completed when price is provided
         })
         
         return {"message": "Quotation updated successfully"}
@@ -313,7 +309,7 @@ def get_quotation_details(quotationId: str):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Quotation not found"
             )
-        print(quotation_data)
+        
         return quotation_data
     except HTTPException as http_exception:
         raise http_exception
@@ -391,31 +387,11 @@ def mark_work_completed(serviceId: str, userType: str):
     return {"message": f"Estado actualizado a {status}"}
 
 
-@router.post("/reviewwww")
-async def submit_review(data: dict):
-    try:
-        quotation_id = data["quotation_id"]
-        review = {
-            "review_for_user": data["review_for_user"],
-            "points_for_user": data["points_for_user"],
-            "review_for_professional": data["review_for_professional"],
-            "points_for_professional": data["points_for_professional"]
-        }
-
-        doc_ref = db.collection("quotations").document(quotation_id)
-        doc_ref.update({"review": review})
-
-        return {"success": True, "message": "Review added"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @router.post("/review")
 async def submit_review(data: dict):
     try:
         quotation_id = data["quotation_id"]
 
-        # Obtener la referencia al documento
         doc_ref = db.collection("quotations").document(quotation_id)
         doc = doc_ref.get()
 
@@ -424,7 +400,6 @@ async def submit_review(data: dict):
         else:
             current_review = {}
 
-        # Construimos la actualización sin borrar los valores previos
         updated_review = {
             "review_for_user": data.get("review_for_user", current_review.get("review_for_user")),
             "points_for_user": data.get("points_for_user", current_review.get("points_for_user")),

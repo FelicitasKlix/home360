@@ -4,7 +4,7 @@ import axios from "axios";
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Notifications from 'expo-notifications';
 
-const API_URL = "http://192.168.0.21:8080";
+export const API_URL = "http://192.168.0.21:8080";
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -15,7 +15,6 @@ Notifications.setNotificationHandler({
 
 const EmergencyChatScreen = ({ route, navigation }) => {
   const { userEmail, receiverEmail, comonUserEmail, quotationId, userType } = route.params;
-  console.log("Received quotationId:", quotationId); 
   const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState("");
   const [isServiceCompleted, setIsServiceCompleted] = useState(false);
@@ -44,13 +43,10 @@ const EmergencyChatScreen = ({ route, navigation }) => {
   const fetchMessages = async () => {
     try {
       if(userEmail != receiverEmail){
-        //const response = await axios.get(`${API_URL}/chat/${userEmail}/${receiverEmail}`);
         const response = await axios.get(`${API_URL}/chat/emergency/${userEmail}/${receiverEmail}?emergency_service_id=${quotationId}`);
-        //console.log(response.data.messages);
         setMessages(response.data.messages);
       }
       if(userEmail == receiverEmail){
-        //const response = await axios.get(`${API_URL}/chat/${userEmail}/${comonUserEmail}`);
         const response = await axios.get(`${API_URL}/chat/emergency/${userEmail}/${comonUserEmail}?emergency_service_id=${quotationId}`);
         setMessages(response.data.messages);
       }  
@@ -62,7 +58,7 @@ const EmergencyChatScreen = ({ route, navigation }) => {
   const fetchReceiverDeviceToken = async () => {
     try {
       const response = await axios.get(`${API_URL}/users/get-device-token/${receiverEmail}`);
-      setReceiverDeviceToken(response.data); // Guardamos el token del receptor
+      setReceiverDeviceToken(response.data);
       
     } catch (error) {
       console.error("Error fetching receiver's device token:", error);
@@ -73,7 +69,6 @@ const EmergencyChatScreen = ({ route, navigation }) => {
     try {
       const response = await axios.get(`${API_URL}/services/status/${quotationId}`);
       setIsServiceCompleted(response.data.completed);
-      console.log(response.data);
       setUserMarkedCompleted(response.data.markedBy.includes(userEmail));
     } catch (error) {
       console.error("Error checking emergency service status:", error);
@@ -96,8 +91,6 @@ const EmergencyChatScreen = ({ route, navigation }) => {
       setMessageText("");
       fetchMessages();
       if (receiverDeviceToken) {
-        //sendPushNotification(receiverDeviceToken, 'Nuevo mensaje en el chat de emergencia', messageText);
-        console.log(receiverEmail);
         sendPushNotification(receiverEmail, messageText);
       }
     } catch (error) {
@@ -105,31 +98,8 @@ const EmergencyChatScreen = ({ route, navigation }) => {
     }
   };
 
-  const sendPushNotification2 = async (deviceToken, title, body) => {
-    const message = {
-      to: deviceToken,
-      title: title,
-      body: body,
-    };
-
-    try {
-      const response = await fetch('https://exp.host/--/api/v2/push/send', {
-        method: 'POST',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(message),
-      });
-      console.log('Notificación enviada:', response);
-    } catch (error) {
-      console.error('Error al enviar la notificación:', error);
-    }
-  };
-
   const sendPushNotification = async () => {
       try {
-        //console.log(JSON.stringify({ userEmail: receiverEmail, message: messageText }));
         if(userEmail != receiverEmail){
         const response = await fetch(`${API_URL}/users/send-notifications`, {
           method: 'POST',
@@ -146,8 +116,6 @@ const EmergencyChatScreen = ({ route, navigation }) => {
         });
         const data = await response.json();
       }
-
-        //const data = await response.json();
         
       } catch (error) {
         Alert.alert("Error", "Hubo un problema al enviar la notificación");
@@ -353,7 +321,7 @@ const styles = StyleSheet.create({
   sendButtonText: { color: "white", fontSize: 16 },
   backButton: { position: 'absolute', marginTop: 20, marginLeft: 10, top: 20, left: 20, zIndex: 1 },
   completeButton: {
-    backgroundColor: "#28a745",  // Verde para indicar que está finalizado
+    backgroundColor: "#28a745",
     padding: 12,
     borderRadius: 8,
     alignItems: "center",

@@ -1,10 +1,8 @@
 from fastapi import HTTPException, status
 from firebase_admin import firestore
 
-from app.models.entities.Physician import Physician
-#from app.models.entities.Appointment import Appointment
 from app.models.entities.Specialty import Specialty
-#from app.models.entities.Laboratory import Laboratory
+from app.models.entities.Professional import Professional
 
 db = firestore.client()
 
@@ -34,62 +32,28 @@ class Admin:
         return db.collection("superusers").document(id).get().exists
 
     @staticmethod
-    def approve_physician(id):
-        db.collection("physicians").document(id).update({"approved": "approved"})
+    def approve_professional(id):
+        db.collection("professionals").document(id).update({"approved": "approved"})
 
-    @staticmethod
-    def approve_laboratory(id):
-        db.collection("laboratories").document(id).update({"approved": "approved"})
 
     @staticmethod
     def deny_physician(id):
         Admin.cancel_appointments_for_physician(id)
-        denied_physician = Physician.get_by_id(id)
-        db.collection("deniedPhysicians").document(id).set(denied_physician)
-        db.collection("deniedPhysicians").document(id).update({"approved": "denied"})
-        Admin.delete_physician(id)
+        denied_professional = Professional.get_by_id(id)
+        db.collection("deniedProfessionals").document(id).set(denied_professional)
+        db.collection("deniedProfessionals").document(id).update({"approved": "denied"})
+        Admin.delete_professional(id)
 
     @staticmethod
-    def unblock_physician(denied_physician):
-        db.collection("physicians").document(denied_physician["id"]).set(
-            {**denied_physician, "approved": "approved"}
+    def unblock_professional(denied_professional):
+        db.collection("professionals").document(denied_professional["id"]).set(
+            {**denied_professional, "approved": "approved"}
         )
-        db.collection("deniedPhysicians").document(denied_physician["id"]).delete()
+        db.collection("deniedProfessionals").document(denied_professional["id"]).delete()
 
     @staticmethod
-    def unblock_lab(denied_laboratory):
-        db.collection("laboratories").document(denied_laboratory["id"]).set(
-            {**denied_laboratory, "approved": "approved"}
-        )
-        db.collection("deniedLaboratories").document(denied_laboratory["id"]).delete()
-
-    @staticmethod
-    def delete_physician(id):
-        db.collection("physicians").document(id).delete()
-
-    @staticmethod
-    def delete_laboratory(id):
-        db.collection("laboratories").document(id).delete()
-
-    @staticmethod
-    def get_specialies_with_physician_count():
-        specialies_with_physician_count = []
-        specialties = Specialty.get_all()
-        for specialty in specialties:
-            physician_count_for_specialty = (
-                db.collection("physicians")
-                .where("approved", "==", "approved")
-                .where("specialty", "==", specialty)
-                .count()
-                .get()
-            )
-            specialies_with_physician_count.append(
-                {
-                    "name": specialty,
-                    "physicians_count": physician_count_for_specialty[0][0].value,
-                }
-            )
-        return specialies_with_physician_count
+    def delete_professional(id):
+        db.collection("professional").document(id).delete()
 
     def create(self):
         if db.collection("superusers").document(self.id).get().exists:

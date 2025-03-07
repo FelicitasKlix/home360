@@ -6,7 +6,6 @@ import TabBar from '../navigation/TabBar';
 
 const API_URL = "http://192.168.0.21:8080";
 
-// Configurar el comportamiento de las notificaciones
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -17,13 +16,10 @@ Notifications.setNotificationHandler({
 
 export default function HomeScreen({ route, navigation }) {
   const { userEmail, userType, deviceToken } = route.params;
-  console.log("$$$$$$$$$$$$");
-  console.log(userEmail);
 
   useEffect(() => {
     registerForPushNotifications();
     
-    // Configurar listeners para notificaciones
     const foregroundSubscription = Notifications.addNotificationReceivedListener(notification => {
       console.log('Notificación recibida en foreground:', notification);
     });
@@ -32,7 +28,6 @@ export default function HomeScreen({ route, navigation }) {
       console.log('Notificación background/killed state:', response);
     });
 
-    // Cleanup
     return () => {
       foregroundSubscription.remove();
       backgroundSubscription.remove();
@@ -44,7 +39,6 @@ export default function HomeScreen({ route, navigation }) {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
       let finalStatus = existingStatus;
       
-      // Si no tenemos permisos, solicitarlos
       if (existingStatus !== 'granted') {
         const { status } = await Notifications.requestPermissionsAsync();
         finalStatus = status;
@@ -55,33 +49,11 @@ export default function HomeScreen({ route, navigation }) {
         return;
       }
 
-      // Asegúrate de que el token esté actualizado
       const token = (await Notifications.getExpoPushTokenAsync()).data;
-      console.log('Expo Push Token:', token);
 
-      // Aquí podrías actualizar el token en tu backend si es necesario
     } catch (error) {
       console.error('Error getting push token:', error);
     }
-  }
-
-  async function sendPushNotification() {
-    const message = {
-      to: deviceToken,
-      title: 'Original Title',
-      body: 'And here is the body!',
-    };
-  
-    const response = await fetch('https://exp.host/--/api/v2/push/send', {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Accept-encoding': 'gzip, deflate',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(message),
-    });
-    console.log(response);
   }
 
   const handleTestNotification = async () => {

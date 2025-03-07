@@ -15,7 +15,6 @@ const ProfessionalSolicitudesScreen = ({ route, navigation }) => {
         setLoading(true);
         const response = await fetch(`${API_URL}/quotation/${userEmail}`);
         const data = await response.json();
-        console.log(data);
         if (!response.ok) {
             throw new Error('Error en la respuesta del servidor');
           }

@@ -4,20 +4,26 @@ import axios from "axios";
 import Icon from "react-native-vector-icons/Ionicons";
 import { useFocusEffect } from "@react-navigation/native";
 import TabBar from "../navigation/TabBar";
+import * as Notifications from 'expo-notifications';
 
 const API_URL = "http://192.168.0.21:8080";
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 const ProfessionalHomeScreen = ({ route, navigation }) => {
   const { userEmail, userType } = route.params;
-  console.log("////////////////");
-  console.log(userType);
-  console.log(userEmail);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [accepting, setAccepting] = useState(null); // Para manejar el estado del botón cuando se acepta una solicitud
+  const [accepting, setAccepting] = useState(null);
   const [userRole, setUserType] = useState('');
+  const [receiverEmail, setReceiverEmail] = useState("");
+  const [serviceId, setServiceId] = useState("");
 
-  // Obtener solicitudes de emergencia
   const fetchEmergencyRequests = useCallback(async () => {
     try {
       setLoading(true);
@@ -30,37 +36,55 @@ const ProfessionalHomeScreen = ({ route, navigation }) => {
     }
   }, []);
 
-  // useFocusEffect para recargar datos al entrar en la pantalla
   useFocusEffect(
     useCallback(() => {
       fetchEmergencyRequests();
     }, [fetchEmergencyRequests])
   );
 
-  // Función para aceptar un servicio
   const acceptService = async (serviceId) => {
     try {
-      setAccepting(serviceId); // Indicar que este botón está en proceso
+      setAccepting(serviceId);
+      setServiceId(serviceId);
       const response = await axios.post(`${API_URL}/services/emergency/accept`, {
         serviceId,
-        professionalEmail: userEmail, // Se envía el email del profesional que acepta
+        professionalEmail: userEmail,
       });
 
       if (response.status === 200) {
         Alert.alert("Éxito", "Servicio aceptado correctamente.");
-        fetchEmergencyRequests(); // Recargar la lista de servicios
+        fetchEmergencyRequests();
       } else {
         Alert.alert("Error", "No se pudo aceptar el servicio.");
       }
+      //const emailResponse = await axios.get(`${API_URL}/services/get-user/${serviceId}`);
+      //console.log(emailResponse);
+      //setReceiverEmail(emailResponse.data);
+      sendPushNotification();
     } catch (error) {
       console.error("Error al aceptar servicio:", error);
       Alert.alert("Error", "Hubo un problema al aceptar el servicio.");
     } finally {
-      setAccepting(null); // Resetear el estado del botón
+      setAccepting(null);
     }
   };
 
-  // Renderizar cada elemento de la lista
+  const sendPushNotification = async () => {
+    try {
+      const emailResponse = await axios.get(`${API_URL}/services/get-user/${serviceId}`);
+      const response = await fetch(`${API_URL}/users/send-notifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userEmail: emailResponse.data, message: "Solicitud de emergencia aceptada! Un profesional se está dirigiendo hacia ti!" })
+      });
+      const data = await response.json();
+      
+    } catch (error) {
+      Alert.alert("Error", "Hubo un problema al enviar la notificación");
+      console.error(error);
+    }
+  };
+
   const renderItem = ({ item }) => (
     <View style={styles.requestItem}>
       <Text style={styles.serviceTitle}>{item.category}</Text>
@@ -112,17 +136,23 @@ const ProfessionalHomeScreen = ({ route, navigation }) => {
                 <Text style={styles.tabText}>Solicitudes</Text>
               </TouchableOpacity>
               
-              <TouchableOpacity style={styles.tabItem}>
-                <Icon name="person-outline" size={24} color="white" />
-                <Text style={styles.tabText}>Perfil</Text>
-              </TouchableOpacity>
+              <TouchableOpacity style={styles.tabItem}
+                      onPress={() => {
+                        if (userRole === 'professional') {
+                          navigation.navigate('ProfessionalProfile', { userEmail, userType });
+                        } else {
+                          navigation.navigate('UserProfile', { userEmail, userType });
+                        }
+                      }}>
+                        <Icon name="person-outline" size={24} color="white" />
+                        <Text style={styles.tabText}>Perfil</Text>
+                      </TouchableOpacity>
             </View>
 
     </SafeAreaView>
   );
 };
 
-// Estilos
 const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,

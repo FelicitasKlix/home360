@@ -5,7 +5,6 @@ import { Picker } from '@react-native-picker/picker';
 const InformacionProfesionalScreen = ({ route, navigation }) => {
   const API_URL = "http://192.168.0.21:8080";
   const { name, phone, email, password } = route.params;
-
   const [tuition, setTuition] = useState('');
   const [birthDate, setBirthDate] = useState('');
   const [specialty, setSpecialty] = useState('');
@@ -14,15 +13,11 @@ const InformacionProfesionalScreen = ({ route, navigation }) => {
   const [showZonesPicker, setShowZonesPicker] = useState(false);
   const [showSpecialtiesPicker, setShowSpecialtiesPicker] = useState(false);
   const [selectedSpecialties, setSelectedSpecialties] = useState([]);
-  
-  const zones = [
-    'Palermo', 'Recoleta', 'Belgrano', 'Núñez', 'Caballito',
-    'Villa Urquiza', 'Villa Devoto', 'Villa del Parque', 'Flores',
-    'Almagro', 'Boedo', 'San Telmo', 'La Boca', 'Puerto Madero'
-  ];
+  const [zones, setZones] = useState([]);
 
   useEffect(() => {
     fetchSpecialties();
+    fetchZones();
   }, []);
 
   const fetchSpecialties = async () => {
@@ -31,6 +26,18 @@ const InformacionProfesionalScreen = ({ route, navigation }) => {
       if (!response.ok) throw new Error('Error obteniendo especialidades');
       const data = await response.json();
       setSpecialties(data.specialties || []);
+    } catch (error) {
+      console.error('Error:', error);
+      Alert.alert('Error', 'No se pudieron cargar las especialidades');
+    }
+  };
+
+  const fetchZones = async () => {
+    try {
+      const response = await fetch(`${API_URL}/zones`);
+      if (!response.ok) throw new Error('Error obteniendo especialidades');
+      const data = await response.json();
+      setZones(data.zones || []);
     } catch (error) {
       console.error('Error:', error);
       Alert.alert('Error', 'No se pudieron cargar las especialidades');
@@ -55,13 +62,11 @@ const InformacionProfesionalScreen = ({ route, navigation }) => {
 
   const handleRegister = async () => {
     try {
-      // Validación de fecha
       if (!isValidDate(birthDate)) {
         Alert.alert('Error', 'Por favor ingresa una fecha válida en formato YYYY-MM-DD');
         return;
       }
 
-      // Otras validaciones
       if (!tuition || selectedZones.length === 0 || selectedSpecialties.length === 0) {
         Alert.alert('Error', 'Por favor completa todos los campos');
         return;

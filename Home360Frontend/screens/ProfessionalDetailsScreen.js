@@ -5,8 +5,6 @@ import TabBar from '../navigation/TabBar';
 
 export default function ProfessionalDetailsScreen({ route, navigation }) {
   const { professional, category, userEmail, userType } = route.params;
-  console.log(">>>>>>>>>>>>>>>>>>>");
-  console.log(userEmail);
 
   return (
     <FlatList
@@ -15,7 +13,6 @@ export default function ProfessionalDetailsScreen({ route, navigation }) {
         <>
           {/* Botón de regreso */}
           <TouchableOpacity style={styles.backButton} 
-          //onPress={() => navigation.goBack()}
           onPress={() => {
             navigation.setParams({ userEmail, userType });
             navigation.goBack();
@@ -86,7 +83,6 @@ export default function ProfessionalDetailsScreen({ route, navigation }) {
   );
 }
 
-// Estilos
 const styles = StyleSheet.create({
   container: {
     flex: 1,

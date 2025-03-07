@@ -17,7 +17,7 @@ from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 load_dotenv()
 
 
-from app.routers import (users, services, specialties, professionals, quotation, chat)
+from app.routers import (users, services, specialties, professionals, quotation, chat, zones)
 from app.models.entities.Auth import Auth
 
 
@@ -29,7 +29,7 @@ app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"], allow_credentials=True,
 )
 
-routers = [users.router, services.router, specialties.router, professionals.router, quotation.router, chat.router]
+routers = [users.router, services.router, specialties.router, professionals.router, quotation.router, chat.router, zones.router]
 
 for router in routers:
     app.include_router(router)

@@ -4,10 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import TabBar from '../navigation/TabBar';
 
 export default function SuccessfulQuotationScreen({ route, navigation }) {
-    //const userEmail = route.params;
     const { userEmail, userType} = route.params;
-    console.log("++++++++++++++++++++");
-    console.log(userEmail);
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>

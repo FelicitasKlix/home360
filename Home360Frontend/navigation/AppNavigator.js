@@ -7,10 +7,8 @@ import RegistroUsuarioScreen from '../screens/RegistroUsuarioScreen';
 import SuccessfulProfileScreen from '../screens/SuccessfulProfileScreen';
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
-import BottomTabNavigator from './BottomTabNavigator';
 import ServicioExpressScreen from '../screens/ServicioExpressScreen';
 import SearchingEmergencyServiceScreen from '../screens/SearchingEmergencySerivceScreen'
-import EmergencyServiceAcceptedScreen from '../screens/EmergencyServiceAcceptedScreen'
 import CotizarTrabajosScreen from '../screens/CotizarTrabajosScreen'
 import RegistroProfesionalScreen from '../screens/RegistroProfesionalScreen';
 import InformacionProfesionalScreen from '../screens/InformacionProfesionalScreen';
@@ -22,8 +20,9 @@ import SuccessfulQuotationScreen from '../screens/SuccessfullQuotationScreen';
 import SolicitudesScreen from '../screens/SolicitudesScreen';
 import ChatScreen from '../screens/ChatScreen';
 import ProfessionalHomeScreen from '../screens/ProfessionalHomeScreen';
-import EmergencyRequestDetailsScreen from '../screens/EmergencyRequestDetailsScreen';
 import EmergencyChatScreen from '../screens/EmergencyChatScreen';
+import UserProfileScreen from '../screens/UserProfileScreen';
+import ProfessionalProfileScreen from '../screens/ProfessionalProfileScreen';
 
 const Stack = createStackNavigator();
 
@@ -40,10 +39,8 @@ export default function AppNavigator() {
         <Stack.Screen name="SuccessfulProfile" component={SuccessfulProfileScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Main" component={BottomTabNavigator} />
         <Stack.Screen name="ServicioExpress" component={ServicioExpressScreen} options={{ tabBarVisible: true }}/>
         <Stack.Screen name="SearchingEmergencyService" component={SearchingEmergencyServiceScreen} />
-        <Stack.Screen name="EmergencyServiceAccepted" component={EmergencyServiceAcceptedScreen} />
         <Stack.Screen name="CotizarTrabajos" component={CotizarTrabajosScreen} />
         <Stack.Screen name="Profesionales" component={ProfesionalesScreen} />
         <Stack.Screen name="ProfessionalDetails" component={ProfessionalDetailsScreen} />
@@ -52,8 +49,9 @@ export default function AppNavigator() {
         <Stack.Screen name="Solicitudes" component={SolicitudesScreen} />
         <Stack.Screen name="Chat" component={ChatScreen} />
         <Stack.Screen name='ProfessionalHome' component={ProfessionalHomeScreen} />
-        <Stack.Screen name='EmergencyRequestDetails' component={EmergencyRequestDetailsScreen} />
         <Stack.Screen name='EmergencyChat' component={EmergencyChatScreen} />
+        <Stack.Screen name='UserProfile' component={UserProfileScreen} />
+        <Stack.Screen name='ProfessionalProfile' component={ProfessionalProfileScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

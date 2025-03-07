@@ -4,10 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import TabBar from '../navigation/TabBar';
 
 export default function ProfesionalesScreen({ route, navigation }) {
-  const { category, userEmail, userType } = route.params; // Categoría seleccionada
-  console.log("////////////////");
-  console.log(category);
-  console.log(userEmail);
+  const { category, userEmail, userType } = route.params;
   const API_URL = "http://192.168.0.21:8080";
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +24,6 @@ export default function ProfesionalesScreen({ route, navigation }) {
       }
   
       const data = await response.json();
-      console.log(data);
       
       if (Array.isArray(data.professionals) && data.professionals.length > 0) {
         setProfessionals(data.professionals);
@@ -50,7 +46,6 @@ export default function ProfesionalesScreen({ route, navigation }) {
     <SafeAreaView style={styles.container}>
     <View style={styles.container}>
       <TouchableOpacity style={styles.backButton} 
-      //onPress={() => navigation.goBack()}
       onPress={() => {
         navigation.setParams({ userEmail, userType });
         navigation.goBack();
@@ -75,9 +70,8 @@ export default function ProfesionalesScreen({ route, navigation }) {
     keyExtractor={(item) => item.id}
     renderItem={({ item }) => (
       <TouchableOpacity 
-        style={styles.card}  // Usar el mismo estilo que tenías antes
+        style={styles.card} 
         onPress={() => {
-          //navigation.navigate('ProfessionalDetails', { professional: item })
           navigation.navigate('ProfessionalDetails', { professional: item, category: category, userEmail, userType })
         }}
       >

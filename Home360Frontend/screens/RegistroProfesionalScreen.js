@@ -3,29 +3,18 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import axios from 'axios';
 
 const RegistroProfesionalScreen = ({ navigation }) => {
-  //const API_URL = "http://192.168.0.109:8080";
-  //const API_URL = "https://home360-44h2.onrender.com"
-  //const API_URL = "http://192.168.0.12:8080" //IP Depto feli
   const API_URL = "http://192.168.0.21:8080";
-  /* const API_URL = Platform.select({
-    ios: 'http://localhost:8080',
-    android: 'http://10.0.2.2:8080', // Para el emulador de Android
-    // Cuando uses Expo Go en dispositivo físico, 
-    // la URL se manejará automáticamente por el túnel
-  }); */
   const [name, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   
   const handleContinue = () => {
-    // Validaciones básicas
     if (!name || !phone || !email || !password) {
       Alert.alert('Error', 'Por favor completa todos los campos');
       return;
     }
 
-    // En lugar de hacer el registro, navegamos a la siguiente pantalla con los datos
     navigation.navigate('InformacionProfesional', {
       name,
       phone,

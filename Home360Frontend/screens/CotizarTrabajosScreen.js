@@ -4,10 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import TabBar from '../navigation/TabBar';
 
 export default function CotizarTrabajosScreen({ route, navigation }) {
-  //const API_URL = "http://192.168.1.25:8080";
   const {userEmail, userType} = route.params;
-  console.log("&&&&&&&&&&&&&&&");
-  console.log(userEmail);
   const API_URL = "http://192.168.0.21:8080";
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,9 +25,7 @@ export default function CotizarTrabajosScreen({ route, navigation }) {
 
       const data = await response.json();
       
-      // Asumiendo que la respuesta viene en el formato {"specialties": [...]}
       if (data.specialties && Array.isArray(data.specialties)) {
-        // Capitalizar primera letra de cada categoría
         const formattedCategories = data.specialties.map(
           category => category.charAt(0).toUpperCase() + category.slice(1)
         );
@@ -51,7 +46,6 @@ export default function CotizarTrabajosScreen({ route, navigation }) {
     navigation.navigate('Profesionales', { category: category, userEmail, userType });
   };
 
-  // Renderizado condicional para el error
   if (error) {
     return (
       <View style={styles.container}>

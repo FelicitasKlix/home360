@@ -29,17 +29,6 @@ class IsLoggedInResponse(BaseModel):
 class ChangePasswordErrorResponse(BaseModel):
     detail: str
 
-
-class UserRolesEnum(str, Enum):
-    admin = "admin"
-    physician = "physician"
-    patient = "patient"
-    laboratory = "laboratory"
-
-
-class UserRolesResponse(BaseModel):
-    roles: list[UserRolesEnum]
-
 class UserTypeResponse(BaseModel):
     type: str
 
@@ -51,3 +40,8 @@ class UserInfoErrorResponse(BaseModel):
 
 class DeviceTokenRepsonse(BaseModel):
     token: str
+
+class UserAllInfoResponse(BaseModel):
+    email: str
+    phone: str
+    first_name: str

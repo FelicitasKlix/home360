@@ -1,15 +1,14 @@
-import requests
 import json
 import os
 from dotenv import load_dotenv
-from typing import Union, Annotated, List
+from typing import  List
 
-from fastapi import APIRouter, status, Depends, Body, HTTPException
+from fastapi import APIRouter, status, HTTPException
 from fastapi.responses import JSONResponse
 
 from app.models.entities.Service import Service
 
-from firebase_admin import firestore, auth
+from firebase_admin import firestore
 
 from app.models.responses.ServiceResponses import (
     SuccessfulRequestResponse,
@@ -64,10 +63,8 @@ def request_emergency_service(
         **{**emergency_service_creation_request.model_dump()}
     )
     try:
-        print(emergency_service)
         emergency_service.create()
-        #Study.add_study(study_name)
-        #updated_studies = Study.get_all()
+        
         return {"message": "Emergency service requested successfully"}
     except HTTPException as http_exception:
         return JSONResponse(
@@ -97,7 +94,7 @@ def get_all_emergency_services():
     """
     try:
         services = Service.get_pending_services()
-        print(services)
+        
         return services
     except Exception as e:
         print(f"Error fetching emergency services: {e}")
@@ -122,7 +119,7 @@ def get_completed_emergency_services():
     """
     try:
         services = Service.get_completed_services()
-        print(services)
+        
         return services
     except Exception as e:
         print(f"Error fetching emergency services: {e}")
@@ -161,7 +158,6 @@ def accept_emergency_service(
         if not service_doc.exists:
             raise HTTPException(status_code=404, detail="Servicio no encontrado")
 
-        # Actualizar Firestore con el email del profesional y el nuevo status
         service_ref.update({
             "professional": request.professionalEmail,
             "status": "accepted"
@@ -196,26 +192,23 @@ def get_active_emergency_service(userEmail: str):
     try:
         services_ref = db.collection("services")
 
-        # Consulta para el usuario que solicitó el servicio
         user_query = services_ref.where("status", "==", "accepted").where("userEmail", "==", userEmail).limit(1)
         user_results = user_query.stream()
 
-        # Consulta para el usuario que es profesional en el servicio
         professional_query = services_ref.where("status", "==", "accepted").where("professional", "==", userEmail).limit(1)
         professional_results = professional_query.stream()
 
-        # Unimos los resultados en una lista
         active_service = None
         for service in user_results:
             active_service = service.to_dict()
             active_service["id"] = service.id
-            break  # Solo tomamos el primer resultado
+            break
 
         if not active_service:
             for service in professional_results:
                 active_service = service.to_dict()
                 active_service["id"] = service.id
-                break  # Solo tomamos el primer resultado
+                break
 
         if not active_service:
             return {"activeService": None}
@@ -260,6 +253,7 @@ def mark_work_completed(serviceId: str, userType: str):
 
     return {"message": f"Estado actualizado a {status}"}
 
+
 @router.get("/status/{emergency_service_id}")
 async def get_emergency_status(emergency_service_id: str):
     try:
@@ -279,7 +273,6 @@ async def submit_review(data: dict):
     try:
         service_id = data["service_id"]
 
-        # Obtener la referencia al documento
         doc_ref = db.collection("services").document(service_id)
         doc = doc_ref.get()
 
@@ -288,7 +281,6 @@ async def submit_review(data: dict):
         else:
             current_review = {}
 
-        # Construimos la actualización sin borrar los valores previos
         updated_review = {
             "review_for_user": data.get("review_for_user", current_review.get("review_for_user")),
             "points_for_user": data.get("points_for_user", current_review.get("points_for_user")),
@@ -301,3 +293,29 @@ async def submit_review(data: dict):
         return {"success": True, "message": "Review added"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@router.get(
+    "/get-user/{service_id}",
+    response_model=str,
+    responses={
+        200: {"description": "List of completed emergency services"},
+        500: {"description": "Internal server error"},
+    },
+)
+def get_user_from_service(service_id: str):
+    """
+    Get completed emergency service requests.
+
+    This will retrieve completed emergency service requests stored in Firestore.
+    """
+    try:
+        user = Service.get_user_from_service(service_id)
+        print(user)
+        return user
+    except Exception as e:
+        print(f"Error fetching users from services: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error",
+        )

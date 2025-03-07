@@ -19,7 +19,6 @@ class Chat:
         sender: str,
         receiver: str,
         quotation: str,
-        #timestamp: str
     ):
         self.id = id
         self.message = message

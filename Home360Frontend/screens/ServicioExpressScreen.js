@@ -5,26 +5,18 @@ import TabBar from '../navigation/TabBar';
 
 export default function ServicioExpressScreen({ route, navigation }) {
   const {userEmail, userType} = route.params;
-  console.log("@@@@@@@@@@@@@@@@@@@");
-  console.log(userEmail);
   const API_URL = "http://192.168.0.21:8080";
   const [description, setProblema] = useState('');
-  const [location, setDireccion] = useState('');
-  const [category, setCategoria] = useState('');
   const [selectedZones, setSelectedZones] = useState([]);
   const [specialties, setSpecialties] = useState([]);
   const [showZonesPicker, setShowZonesPicker] = useState(false);
   const [showSpecialtiesPicker, setShowSpecialtiesPicker] = useState(false);
   const [selectedSpecialties, setSelectedSpecialties] = useState([]);
-
-  const zones = [
-    'Palermo', 'Recoleta', 'Belgrano', 'Núñez', 'Caballito',
-    'Villa Urquiza', 'Villa Devoto', 'Villa del Parque', 'Flores',
-    'Almagro', 'Boedo', 'San Telmo', 'La Boca', 'Puerto Madero'
-  ];
+  const [zones, setZones] = useState([]);
 
   useEffect(() => {
     fetchSpecialties();
+    fetchZones();
   }, []);
 
   const solicitarServicio = async () => {
@@ -32,15 +24,12 @@ export default function ServicioExpressScreen({ route, navigation }) {
       const response = await fetch(`${API_URL}/services/emergency`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        //body: JSON.stringify({ description, location, category }),
         body: JSON.stringify({ userEmail, description, location: selectedZones, category: selectedSpecialties }),
       });
 
       
-
       const data = await response.json();
       console.log('Respuesta del backend:', data);
-      //alert('Servicio solicitado con éxito');
       navigation.navigate('SearchingEmergencyService', { userEmail, userType}); 
     } catch (error) {
       console.error('Error solicitando servicio:', error);
@@ -59,6 +48,18 @@ export default function ServicioExpressScreen({ route, navigation }) {
       Alert.alert('Error', 'No se pudieron cargar las especialidades');
     }
   };
+
+  const fetchZones = async () => {
+      try {
+        const response = await fetch(`${API_URL}/zones`);
+        if (!response.ok) throw new Error('Error obteniendo especialidades');
+        const data = await response.json();
+        setZones(data.zones || []);
+      } catch (error) {
+        console.error('Error:', error);
+        Alert.alert('Error', 'No se pudieron cargar las especialidades');
+      }
+    };
 
   const toggleZoneSelection = (zone) => {
     setSelectedZones(prev => 

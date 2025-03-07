@@ -2,7 +2,6 @@ from fastapi import APIRouter, status, Depends, HTTPException
 from fastapi.responses import JSONResponse
 
 from app.models.entities.Auth import Auth
-from app.models.entities.Admin import Admin
 from app.models.entities.Specialty import Specialty
 from app.models.responses.SpecialtiesResponses import (
     GetSpecialtiesResponse,
@@ -59,8 +58,7 @@ def get_all_specialties():
     },
 )
 def add_specialty(
-    specialty_name: str,
-    #uid=Depends(Auth.is_admin),
+    specialty_name: str
 ):
     """
     Add a new specialty.
@@ -100,8 +98,7 @@ def add_specialty(
     },
 )
 def delete_specialty(
-    specialty_name: str,
-    uid=Depends(Auth.is_admin),
+    specialty_name: str
 ):
     """
     Deletes a specialty.
