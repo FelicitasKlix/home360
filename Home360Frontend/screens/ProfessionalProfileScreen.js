@@ -4,7 +4,7 @@ import axios from 'axios';
 import TabBar from '../navigation/TabBar';
 import { launchImageLibrary } from 'react-native-image-picker';
 
-const API_URL = "http://192.168.0.21:8080";
+const API_URL = "http://192.168.0.19:8080";
 
 const UserProfileScreen = ({ route, navigation }) => {
   const { userEmail, userType } = route.params;
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   buttonSupport: {
-    backgroundColor: 'blue',
+    backgroundColor: '#008A45',
     padding: 15,
     borderRadius: 10,
     width: '90%',

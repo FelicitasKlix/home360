@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   View, 
   Text, 
@@ -16,8 +16,18 @@ import {
 import axios from "axios";
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Notifications from "expo-notifications";
+import io from "socket.io-client";
 
-const API_URL = "http://192.168.0.21:8080";
+const API_URL = "http://192.168.0.19:8080";
+//const SOCKET_URL = "http://192.168.0.19:8080/ws";
+//const SOCKET_URL = "http://192.168.0.19:8080/sockets";
+//const socket = io(SOCKET_URL);
+//const socket = io('http://192.168.0.19:8080', {path: '/sockets/sockets'})
+//const socket = io('http://192.168.0.19:8080/sockets/sockets')
+/*const socket = io('http://192.168.0.19:8080/sockets', {
+  path: "/sockets/socket.io/"
+});
+*/
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -45,7 +55,12 @@ const ChatScreen = ({ route, navigation }) => {
   const [userReview, setUserReview] = useState("");
   const [professionalReview, setProfessionalReview] = useState("");
   const [receiverDeviceToken, setReceiverDeviceToken] = useState("");
+
+  //const [isConnected, setIsConnected] = useState(socket.connected);
   
+  // Socket.io reference
+  //const socketRef = useRef(null);
+  //const actualReceiver = userEmail !== receiverEmail ? receiverEmail : comonUserEmail;
 
   useEffect(() => {
     fetchMessages();
@@ -54,6 +69,82 @@ const ChatScreen = ({ route, navigation }) => {
     fetchQuotation();
     fetchReceiverDeviceToken();
   }, [quotationId]);
+/*
+  useEffect(()=>{
+    socket.on('connect', () =>{
+      setIsConnected(socket.connected);
+    });
+    socket.on('disconnect', () =>{
+      setIsConnected(socket.connected);
+    });
+    socket.on('join', (data) => {
+      setMessages((prevMessages) => [...prevMessages, {...data, type: 'join'}]);
+    });
+    socket.on('chat', (data) => {
+      setMessages((prevMessages) => [...prevMessages, {...data, type: 'chat'}]);
+    });
+  })*/
+/*
+  // Connect to socket on component mount
+  useEffect(() => {
+    // Initialize socket connection
+    //socketRef.current = io(SOCKET_URL);
+    socketRef.current = io(SOCKET_URL, { withCredentials: true});
+    //, transports: ["websocket"]
+    // Register events
+    socketRef.current.on('connect', () => {
+      console.log('Connected to socket server');
+      
+      // Register the user with their email
+      socketRef.current.emit('join_user', { userEmail });
+    });
+    
+    // Listen for incoming messages
+    socketRef.current.on('new_message', (data) => {
+      console.log('Received message:', data);
+      
+      // Only add the message if it's related to the current conversation and quotation
+      if (data.quotation_id === quotationId && 
+          ((data.sender === actualReceiver && data.receiver === userEmail) || 
+           (data.sender === userEmail && data.receiver === actualReceiver))) {
+        
+        setMessages(prevMessages => [
+          ...prevMessages, 
+          { 
+            message: data.message, 
+            sender: data.sender, 
+            timestamp: data.timestamp 
+          }
+        ]);
+      }
+    });
+    
+    // Listen for quotation updates
+    socketRef.current.on('quotation_update', (data) => {
+      if (data.quotation_id === quotationId) {
+        fetchQuotation();
+      }
+    });
+    
+    socketRef.current.on('disconnect', () => {
+      console.log('Disconnected from socket server');
+    });
+    
+    // Clean up on component unmount
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+      }
+    };
+  }, [userEmail, actualReceiver, quotationId]);
+
+  useEffect(() => {
+    fetchMessages();
+    fetchReceiverName();
+    fetchUserType();
+    fetchQuotation();
+    fetchReceiverDeviceToken();
+  }, [quotationId]);*/
 
   const fetchUserType = async () => {
     try {
@@ -134,6 +225,7 @@ const ChatScreen = ({ route, navigation }) => {
       });
 
       setMessages([...messages, { message: newMessage, sender: userEmail, timestamp: new Date().toISOString() }]);
+      //socket.emit('chat', newMessage)
       setNewMessage("");
       if (receiverDeviceToken) {
         sendPushNotification(receiverEmail, newMessage);
@@ -142,6 +234,49 @@ const ChatScreen = ({ route, navigation }) => {
       console.error("Error sending message:", error);
     }
   };
+/*
+  const sendMessage = async () => {
+    if (!newMessage.trim()) return;
+
+    try {
+      // Create message object
+      const messageData = {
+        message: newMessage,
+        sender: userEmail,
+        receiver: actualReceiver, 
+        quotation_id: quotationId,
+        timestamp: new Date().toISOString()
+      };
+
+      // Send to backend API to save in database
+      await axios.post(`${API_URL}/chat/send`, messageData);
+
+      // Add message to state (for immediate UI update)
+      setMessages(prevMessages => [
+        ...prevMessages, 
+        { 
+          message: newMessage, 
+          sender: userEmail, 
+          timestamp: new Date().toISOString() 
+        }
+      ]);
+      
+      // Emit the message through socket
+      if (socketRef.current) {
+        socketRef.current.emit('send_message', messageData);
+      }
+
+      // Clear the input field
+      setNewMessage("");
+      
+      // Send push notification
+      if (receiverDeviceToken) {
+        sendPushNotification();
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  };*/
 
   const sendPushNotification = async () => {
       try {
@@ -219,6 +354,8 @@ const handleUpdateQuotation = async () => {
     try {
       const reviewData = {
         quotation_id: quotationId,
+        //agregado user_email
+        user_email: userEmail,
       };
 
       if (userType === "user") {
@@ -724,7 +861,7 @@ return (
               value={newMessage}
               onChangeText={setNewMessage}
             />
-            <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+            <TouchableOpacity style={styles.sendButton} onPress={sendMessage} /*onPress={socket.emit('chat', newMessage)}*/>
               <Text style={styles.sendButtonText}>Enviar</Text>
             </TouchableOpacity>
           </View>

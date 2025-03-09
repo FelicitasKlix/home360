@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView 
 import { Picker } from '@react-native-picker/picker';
 
 const InformacionProfesionalScreen = ({ route, navigation }) => {
-  const API_URL = "http://192.168.0.21:8080";
+  const API_URL = "http://192.168.0.19:8080";
   const { name, phone, email, password } = route.params;
   const [tuition, setTuition] = useState('');
   const [birthDate, setBirthDate] = useState('');
@@ -96,7 +96,7 @@ const InformacionProfesionalScreen = ({ route, navigation }) => {
         throw new Error(data.detail || 'Error en el registro');
       }
 
-      Alert.alert('Registro exitoso', 'Tu cuenta ha sido creada.');
+      //Alert.alert('Registro exitoso', 'Tu cuenta ha sido creada.');
       navigation.navigate('ApprovalPending');
     } catch (error) {
       console.error('Error:', error);

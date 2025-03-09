@@ -6,7 +6,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import TabBar from "../navigation/TabBar";
 import * as Notifications from 'expo-notifications';
 
-const API_URL = "http://192.168.0.21:8080";
+const API_URL = "http://192.168.0.19:8080";
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -23,6 +23,7 @@ const ProfessionalHomeScreen = ({ route, navigation }) => {
   const [userRole, setUserType] = useState('');
   const [receiverEmail, setReceiverEmail] = useState("");
   const [serviceId, setServiceId] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
   const fetchEmergencyRequests = useCallback(async () => {
     try {
@@ -31,10 +32,17 @@ const ProfessionalHomeScreen = ({ route, navigation }) => {
       setRequests(response.data);
     } catch (error) {
       console.error("Error fetching emergency requests:", error);
+      Alert.alert("Error", "No se pudieron cargar las solicitudes de emergencia.");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchEmergencyRequests();
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -71,6 +79,7 @@ const ProfessionalHomeScreen = ({ route, navigation }) => {
 
   const sendPushNotification = async () => {
     try {
+      console.log(serviceId);
       const emailResponse = await axios.get(`${API_URL}/services/get-user/${serviceId}`);
       const response = await fetch(`${API_URL}/users/send-notifications`, {
         method: 'POST',
@@ -105,6 +114,20 @@ const ProfessionalHomeScreen = ({ route, navigation }) => {
     </View>
   );
 
+  const EmptyListMessage = () => (
+    <View style={styles.emptyListContainer}>
+      <Icon name="alert-circle-outline" size={50} color="#008A45" />
+      <Text style={styles.emptyListText}>No hay solicitudes express disponibles</Text>
+      <TouchableOpacity 
+        style={styles.refreshButton}
+        onPress={handleRefresh}
+      >
+        <Text style={styles.refreshButtonText}>Actualizar</Text>
+        <Icon name="refresh-outline" size={16} color="#fff" />
+      </TouchableOpacity>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.mainContainer}>
       <View style={styles.container}>
@@ -114,12 +137,35 @@ const ProfessionalHomeScreen = ({ route, navigation }) => {
         {loading ? (
           <ActivityIndicator size="large" color="#4CAF50" />
         ) : (
-          <FlatList 
-            data={requests} 
-            renderItem={renderItem} 
-            keyExtractor={(item) => item.id.toString()} 
-            style={styles.flatList}
-          />
+          <>
+            <FlatList 
+              data={requests} 
+              renderItem={renderItem} 
+              keyExtractor={(item) => item.id.toString()} 
+              style={styles.flatList}
+              ListEmptyComponent={EmptyListMessage}
+            />
+            {requests.length > 0 && (
+              <TouchableOpacity 
+                style={styles.floatingRefreshButton}
+                onPress={handleRefresh}
+                disabled={refreshing}
+              >
+                <Icon 
+                  name={refreshing ? "sync" : "refresh-outline"} 
+                  size={24} 
+                  color="#fff" 
+                  style={refreshing ? styles.refreshingIcon : null}
+                />
+              </TouchableOpacity>
+            )}
+            {refreshing && requests.length > 0 && (
+              <View style={styles.refreshingOverlay}>
+                <ActivityIndicator size="small" color="#4CAF50" />
+                <Text style={styles.refreshingText}>Actualizando...</Text>
+              </View>
+            )}
+          </>
         )}
       </View>
       
@@ -237,7 +283,69 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  emptyListContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 40,
+  },
+  emptyListText: {
+    color: "#EBEBEB",
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  floatingRefreshButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#008A45',
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  refreshButton: {
+    backgroundColor: '#008A45',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 10,
+  },
+  refreshButtonText: {
+    color: '#fff',
+    marginRight: 8,
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  refreshingIcon: {
+    transform: [{ rotate: '45deg' }]
+  },
+  refreshingOverlay: {
+    position: 'absolute',
+    bottom: 80,
+    right: 20,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 20,
+    padding: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  refreshingText: {
+    color: 'white',
+    marginLeft: 8,
+    fontSize: 12,
+  }
 });
 
 export default ProfessionalHomeScreen;
-

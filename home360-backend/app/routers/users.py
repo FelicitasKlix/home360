@@ -31,6 +31,11 @@ from app.models.responses.UserResponses import (
     UserAllInfoResponse
 )
 
+from app.models.responses.RewardResponses import(
+    SuccessfulRewardsResponse,
+    RewardsErrorResponse
+)
+
 #from app.models.responses.ProfessionalResponses import ProfessionalResponse
 
 from app.models.requests.UserRequests import (
@@ -569,3 +574,44 @@ async def send_push_notifications(notification_request: ChatNotificationRequest)
             content={"detail": f"Error al enviar notificación: {str(e)}"}
         )
     
+@router.get(
+    "/reviews/{user_email}",
+    status_code=status.HTTP_200_OK,
+    response_model=SuccessfulRewardsResponse,
+    responses={
+        401: {"model": RewardsErrorResponse},
+    },
+)
+def get_user_rewards(user_email: str):
+    """
+    Get the rewards (sellos obtenidos) of the user.
+    """
+    try:
+        rewards = Patient.fetch_rewards_for_user(user_email)
+        print(rewards)
+        #rewards = User.fetch_rewards_for_user(user_email)
+        return {"amount": rewards}
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": f"Error retrieving rewards: {str(e)}"}
+        )
+
+
+@router.get("/rewards/{email}")
+async def fetch_rewards_for_user(email: str):
+    try:
+        # Buscar en ambas colecciones
+        user_ref = db.collection("patients").where("email", "==", email).get()
+        if not user_ref:
+            user_ref = db.collection("professionals").where("email", "==", email).get()
+        
+        if not user_ref:
+            raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+        user_data = user_ref[0].to_dict()
+        rewards = user_data.get("rewards", 0)
+
+        return {"amount": rewards}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

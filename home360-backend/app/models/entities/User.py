@@ -75,6 +75,10 @@ class User:
         for doc in docs:
             doc_ref = db.collection("users").document(doc.id)
             return doc_ref.get().to_dict().get("device_token")
+        
+    @staticmethod
+    def fetch_rewards_for_user(email):
+        docs = db.collection("patients").where("email", "==", email).get()
 
     def create(self):
         if db.collection("users").document(self.id).get().exists:

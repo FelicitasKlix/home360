@@ -6,12 +6,18 @@ import Icon from 'react-native-vector-icons/Ionicons';
 const TabBar = ({ navigation, userEmail, userType }) => {
   return (
     <View style={styles.tabBar}>
-      <TouchableOpacity 
-        style={styles.tabItem} 
-        onPress={() => navigation.navigate('Home', {userEmail, userType })}>
-        <Icon name="home-outline" size={24} color="white" />
-        <Text style={styles.tabText}>Home</Text>
-      </TouchableOpacity>
+      
+      <TouchableOpacity style={styles.tabItem}
+              onPress={() => {
+                if (userType === 'professional') {
+                  navigation.navigate('ProfessionalHome', { userEmail, userType });
+                } else {
+                  navigation.navigate('Home', { userEmail, userType });
+                }
+              }}>
+                <Icon name="home-outline" size={24} color="white" />
+                <Text style={styles.tabText}>Perfil</Text>
+              </TouchableOpacity>
 
       <TouchableOpacity 
         style={styles.tabItem} 

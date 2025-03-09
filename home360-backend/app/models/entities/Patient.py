@@ -77,14 +77,15 @@ class Patient:
             return doc_ref.get().to_dict().get("device_token")
 
     @staticmethod
-    def has_pending_scores(id):
-        pending_scores_doc = db.collection("patientsPendingToScore").document(id).get()
-        if not pending_scores_doc.exists:
-            return False
-        appts = db.collection("appointments").where("patient_id", "==", id).where("status", "==", "closed").get()
-        print(len(appts)>0)
-        print(pending_scores_doc.to_dict())
-        return len(appts) > 0
+    def fetch_rewards_for_user(email):
+        docs = db.collection("patients").where("email", "==", email).get()
+        
+        for doc in docs:
+            data = doc.to_dict()
+            return data.get("reviews", 0)
+        
+        return 0
+
 
     def create(self):
         if db.collection("patients").document(self.id).get().exists:

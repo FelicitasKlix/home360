@@ -1,31 +1,60 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
+import axios from 'axios';
 import TabBar from '../navigation/TabBar';
+
+const API_URL = "http://192.168.0.19:8080";
 
 export default function ProfessionalDetailsScreen({ route, navigation }) {
   const { professional, category, userEmail, userType } = route.params;
+  const [reviews, setReviews] = useState([]);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/professionals/reviews/${professional.email}`);
+        const data = response.data.reviews;
+
+        if (response.data) {
+          setReviews(response.data.reviews);
+        } else {
+          console.error("Error al obtener las reseñas:", data.detail);
+        }
+      } catch (error) {
+        console.error("Error en la solicitud:", error);
+      }
+    };
+
+    fetchReviews();
+  }, [professional.email]); // Se ejecuta cuando cambia el email del profesional
 
   return (
     <FlatList
-    contentContainerStyle={{ backgroundColor: '#1E1E1E', flexGrow: 1 }}
+      contentContainerStyle={{ backgroundColor: '#1E1E1E', flexGrow: 1 }}
       ListHeaderComponent={
         <>
           {/* Botón de regreso */}
-          <TouchableOpacity style={styles.backButton} 
-          onPress={() => {
-            navigation.setParams({ userEmail, userType });
-            navigation.goBack();
-          }}
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => {
+              navigation.setParams({ userEmail, userType });
+              navigation.goBack();
+            }}
           >
             <Icon name="arrow-back" size={30} color="white" />
           </TouchableOpacity>
 
           {/* Información principal */}
           <View style={styles.header}>
-            <Image source={{ uri: professional.avatar || 'https://via.placeholder.com/100' }} style={styles.avatar} />
+            <Image
+              source={{ uri: professional.avatar || 'https://via.placeholder.com/100' }}
+              style={styles.avatar}
+            />
             <View style={styles.info}>
-              <Text style={styles.name}>{professional.first_name}, {professional.age}</Text>
+              <Text style={styles.name}>
+                {professional.first_name}, {professional.age}
+              </Text>
               <Text style={styles.details}>
                 <Icon name="location-outline" size={16} /> A {professional.distance} km de distancia
               </Text>
@@ -39,7 +68,12 @@ export default function ProfessionalDetailsScreen({ route, navigation }) {
               )}
               <View style={styles.rating}>
                 {Array.from({ length: 5 }).map((_, index) => (
-                  <Icon key={index} name={index < professional.rating ? "star" : "star-outline"} size={20} color="#FFD700" />
+                  <Icon
+                    key={index}
+                    name={index < professional.average_score ? 'star' : 'star-outline'}
+                    size={20}
+                    color="#FFD700"
+                  />
                 ))}
               </View>
             </View>
@@ -56,20 +90,30 @@ export default function ProfessionalDetailsScreen({ route, navigation }) {
           </View>
 
           {/* Botón Pedir Cotización */}
-          <TouchableOpacity style={styles.quoteButton} onPress={() => {navigation.navigate('PedirCotizacion', { professional: professional, category: category, userEmail, userType })}}>
+          <TouchableOpacity
+            style={styles.quoteButton}
+            onPress={() => {
+              navigation.navigate('PedirCotizacion', { professional: professional, category: category, userEmail, userType });
+            }}
+          >
             <Text style={styles.quoteButtonText}>Pedir Cotización</Text>
           </TouchableOpacity>
         </>
       }
-      data={professional.reviews}
+      data={reviews} // Ahora estamos pasando las reseñas desde el estado
       keyExtractor={(item, index) => index.toString()}
       renderItem={({ item }) => (
         <View style={styles.reviewCard}>
-          <Text style={styles.reviewName}>{item.user}</Text>
-          <Text style={styles.reviewText}>{item.comment}</Text>
+          <Text style={styles.reviewName}>Usuario</Text>
+          <Text style={styles.reviewText}>{item.review_for_professional}</Text>
           <View style={styles.rating}>
             {Array.from({ length: 5 }).map((_, index) => (
-              <Icon key={index} name={index < item.rating ? "star" : "star-outline"} size={16} color="#FFD700" />
+              <Icon
+                key={index}
+                name={index < item.points_for_professional ? 'star' : 'star-outline'}
+                size={16}
+                color="#FFD700"
+              />
             ))}
           </View>
         </View>
@@ -174,6 +218,10 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginVertical: 10,
+    borderWidth: 2,
+    borderColor: '#2D9135', // Borde verde
+    width: '90%', // Ocupa el 90% del ancho
+    alignSelf: 'center', // Centrado horizontalmente
   },
   reviewName: {
     fontSize: 16,
@@ -190,7 +238,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     marginLeft: 20,
-    marginRight:20,
+    marginRight: 20,
     alignItems: 'center',
     marginTop: 10,
   },

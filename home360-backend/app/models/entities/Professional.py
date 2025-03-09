@@ -184,6 +184,25 @@ class Professional:
     @staticmethod
     def get_name_and_last_name(id):
         return db.collection("professionals").document(id).get().to_dict()["first_name"], db.collection("professionals").document(id).get().to_dict()["last_name"]
+    
+    @staticmethod
+    def get_professionals_reviews(email):
+        quotations_ref = db.collection("quotations")
+        
+        quotations = quotations_ref.where("professionalEmail", "==", email).stream()
+        reviews = []
+
+        for quotation in quotations:
+            quotation_data = quotation.to_dict()
+
+            if "review" in quotation_data:
+                review_data = {
+                    "points_for_professional": quotation_data["review"].get("points_for_professional"),
+                    "review_for_professional": quotation_data["review"].get("review_for_professional")
+                }
+                reviews.append(review_data)
+
+        return reviews
 
     def create(self):
         if db.collection("professionals").document(self.id).get().exists:

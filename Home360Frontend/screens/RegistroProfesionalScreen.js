@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'reac
 import axios from 'axios';
 
 const RegistroProfesionalScreen = ({ navigation }) => {
-  const API_URL = "http://192.168.0.21:8080";
+  const API_URL = "http://192.168.0.19:8080";
   const [name, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

@@ -8,6 +8,7 @@ from app.models.entities.Professional import Professional
 from app.models.responses.ProfessionalResponses import (
     GetProfessionalsError,
     GetProfessionalsResponse,
+    GetProfessionalReviews
 )
 
 router = APIRouter(
@@ -44,6 +45,36 @@ def get_professionals_by_specialty(specialty_name: str):
         
         professionals_sorted = sorted(professionals, key=lambda prof: prof.get('average_score', 0), reverse=True)
         return {"professionals": professionals_sorted}
+    except:
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": "Internal server error"},
+        )
+    
+
+@router.get(
+    "/reviews/{email}",
+    status_code=status.HTTP_200_OK,
+    response_model=GetProfessionalReviews,
+    responses={
+        401: {"model": GetProfessionalsError},
+        500: {"model": GetProfessionalsError},
+    },
+)
+def get_professional_reviews(email: str):
+    """
+    Get all reviews for a professional.
+
+    This will allow authenticated users to retrieve all reviews for a chosen professional.
+
+    This path operation will:
+
+    * Return all the reviews for the professional.
+    * Throw an error if retrieving fails.
+    """
+    try:
+        reviews = Professional.get_professionals_reviews(email)
+        return {"reviews": reviews}
     except:
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

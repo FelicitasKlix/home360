@@ -4,7 +4,7 @@ import axios from "axios";
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Notifications from 'expo-notifications';
 
-export const API_URL = "http://192.168.0.21:8080";
+export const API_URL = "http://192.168.0.19:8080";
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,

@@ -18,3 +18,6 @@ class GetProfessionalsResponse(BaseModel):
 
 class GetProfessionalsError(BaseModel):
     detail: str
+
+class GetProfessionalReviews(BaseModel):
+    reviews: list

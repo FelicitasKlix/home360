@@ -5,7 +5,7 @@ import TabBar from '../navigation/TabBar';
 
 export default function ProfesionalesScreen({ route, navigation }) {
   const { category, userEmail, userType } = route.params;
-  const API_URL = "http://192.168.0.21:8080";
+  const API_URL = "http://192.168.0.19:8080";
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

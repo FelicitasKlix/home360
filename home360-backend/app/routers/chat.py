@@ -2,7 +2,7 @@ import json
 import os
 from dotenv import load_dotenv
 from datetime import datetime
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from firebase_admin import firestore
 from app.models.entities.Message import Message
 from app.models.entities.EmergencyMessage import EmergencyMessage

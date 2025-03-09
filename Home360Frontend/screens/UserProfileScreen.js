@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Alert, StyleSheet, TouchableOpacity, SafeAreaView, FlatList } from 'react-native';
 import axios from 'axios';
 import TabBar from '../navigation/TabBar';
+import Icon from 'react-native-vector-icons/Ionicons';
 
-const API_URL = "http://192.168.0.21:8080";
+const API_URL = "http://192.168.0.19:8080";
 
 const UserProfileScreen = ({ route, navigation }) => {
   const { userEmail, userType } = route.params;
@@ -12,6 +13,7 @@ const UserProfileScreen = ({ route, navigation }) => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [rewards, setRewards] = useState([]);
+  const [reviews, setReviews] = useState([]);
 
   useEffect(() => {
     fetchUserData();
@@ -30,8 +32,10 @@ const UserProfileScreen = ({ route, navigation }) => {
 
   const fetchUserRewards = async () => {
     try {
-      const response = await axios.get(`${API_URL}/users/rewards/${user.email}`);
-      setRewards(response.data.rewards);
+      const response = await axios.get(`${API_URL}/users/reviews/${userEmail}`);
+      setReviews(response.data.amount);
+      const resp = await axios.get(`${API_URL}/users/rewards/${userEmail}`);
+      setRewards(resp.data.amount);
     } catch (error) {
       Alert.alert('Error', 'No se pudieron obtener los sellos obtenidos');
     }
@@ -70,7 +74,7 @@ const UserProfileScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.container}>
       <FlatList
         data={[]}
-        keyExtractor={() => 'dummy'} 
+        keyExtractor={() => "dummy"}
         contentContainerStyle={{ flexGrow: 1 }}
         ListHeaderComponent={
           <>
@@ -80,7 +84,7 @@ const UserProfileScreen = ({ route, navigation }) => {
               <Text style={styles.text}>Email: {user.email}</Text>
               <Text style={styles.text}>Teléfono: {user.phone}</Text>
             </View>
-
+  
             <View style={styles.sectionContainer}>
               <Text style={styles.subtitle}>Cambiar Contraseña</Text>
               <TextInput
@@ -108,20 +112,39 @@ const UserProfileScreen = ({ route, navigation }) => {
                 <Text style={styles.buttonTextOutline}>Cambiar contraseña</Text>
               </TouchableOpacity>
             </View>
-
+  
+            {/* Sección de Sellos Obtenidos */}
             <View style={styles.sectionContainer}>
               <Text style={styles.subtitle2}>Sellos Obtenidos</Text>
-              {rewards.length > 0 ? (
-                rewards.map((reward, index) => <Text key={index} style={styles.text}>{reward}</Text>)
+              {reviews > 0 ? (
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+                  {[...Array(Math.floor(reviews / 2))].map((_, index) => (
+                    <Icon key={index} name="trophy" size={24} color="gold" />
+                  ))}
+                  {reviews % 2 !== 0 && (
+                    <Icon name="trophy" size={24} color="gold" style={{ opacity: 0.5 }} />
+                  )}
+                </View>
               ) : (
                 <Text style={styles.text}>No tienes sellos aún</Text>
               )}
             </View>
-
+  
+            {/* Sección de Beneficios */}
+            {rewards > 0 && (
+              <View style={styles.sectionContainer}>
+                {[...Array(rewards)].map((_, index) => (
+                  <TouchableOpacity key={index} style={styles.rewardCard} onPress={() => alert("Canjear beneficio")}>
+                    <Text style={styles.rewardText}>Desbloqueá tu beneficio</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+  
             <TouchableOpacity style={styles.buttonDelete} onPress={handleDeleteAccount}>
               <Text style={styles.buttonTextOutline}>Eliminar cuenta</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.buttonSupport} onPress={() => Alert.alert('Soporte', 'support@home360.com')}>
+            <TouchableOpacity style={styles.buttonSupport} onPress={() => Alert.alert("Soporte", "support@home360.com")}>
               <Text style={styles.buttonTextOutline}>Soporte</Text>
             </TouchableOpacity>
           </>
@@ -130,6 +153,7 @@ const UserProfileScreen = ({ route, navigation }) => {
       <TabBar navigation={navigation} userEmail={userEmail} userType={userType} />
     </SafeAreaView>
   );
+  
 };
 
 const styles = StyleSheet.create({
@@ -199,7 +223,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   buttonSupport: {
-    backgroundColor: 'blue',
+    backgroundColor: '#EBEBEB',
     padding: 15,
     borderRadius: 10,
     width: '90%',
@@ -212,6 +236,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  rewardCard: {
+    backgroundColor: "#008A45",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginVertical: 5,
+  },
+  rewardText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#333",
+  },
+  
 });
 
 export default UserProfileScreen;

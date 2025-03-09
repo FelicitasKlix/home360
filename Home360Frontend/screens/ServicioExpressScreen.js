@@ -5,7 +5,7 @@ import TabBar from '../navigation/TabBar';
 
 export default function ServicioExpressScreen({ route, navigation }) {
   const {userEmail, userType} = route.params;
-  const API_URL = "http://192.168.0.21:8080";
+  const API_URL = "http://192.168.0.19:8080";
   const [description, setProblema] = useState('');
   const [selectedZones, setSelectedZones] = useState([]);
   const [specialties, setSpecialties] = useState([]);
