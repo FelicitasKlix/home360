@@ -6,7 +6,7 @@ import { Platform } from 'react-native';
 
 
 const LoginScreen = ({ navigation }) => {
-  const API_URL = "http://192.168.0.19:8080";
+  const API_URL = "https://home360-44h2.onrender.com";
   const [userEmail, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [deviceToken, setDeviceToken] = useState("");

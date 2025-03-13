@@ -5,7 +5,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 const ProfessionalSolicitudesScreen = ({ route, navigation }) => {
   const { userEmail } = route.params;
-  const API_URL = "http://192.168.0.19:8080";
+  const API_URL = "https://home360-44h2.onrender.com";
   const [quotations, setQuotations] = useState({ pending: [], completed: [], rejected: [] });
   const [loading, setLoading] = useState(true);
 

@@ -4,8 +4,8 @@ import axios from "axios";
 import Icon from 'react-native-vector-icons/Ionicons';
 import * as Notifications from 'expo-notifications';
 
-export const API_URL = "http://192.168.0.19:8080";
-export const WS_URL = "ws://192.168.0.19:8080";
+const API_URL = "https://home360-44h2.onrender.com";
+export const WS_URL = "wss://home360-44h2.onrender.com";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

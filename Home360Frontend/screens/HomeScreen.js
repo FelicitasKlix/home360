@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import * as Notifications from 'expo-notifications';
 import TabBar from '../navigation/TabBar';
 
-const API_URL = "http://192.168.0.19:8080";
+const API_URL = "https://home360-44h2.onrender.com";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

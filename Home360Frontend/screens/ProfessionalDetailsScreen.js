@@ -3,7 +3,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList } from 'react
 import Icon from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
 
-const API_URL = "http://192.168.0.19:8080";
+const API_URL = "https://home360-44h2.onrender.com";
 
 export default function ProfessionalDetailsScreen({ route, navigation }) {
   const { professional, category, userEmail, userType } = route.params;

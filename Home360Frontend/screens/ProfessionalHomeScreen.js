@@ -6,7 +6,8 @@ import { useFocusEffect } from "@react-navigation/native";
 import TabBar from "../navigation/TabBar";
 import * as Notifications from 'expo-notifications';
 
-const API_URL = "http://192.168.0.19:8080";
+const API_URL = "https://home360-44h2.onrender.com";
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,

@@ -5,7 +5,7 @@ import TabBar from '../navigation/TabBar';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialIcons } from '@expo/vector-icons';
 
-const API_URL = "http://192.168.0.19:8080";
+const API_URL = "https://home360-44h2.onrender.com";
 
 const ProfessionalProfileScreen = ({ route, navigation }) => {
   const { userEmail, userType } = route.params;

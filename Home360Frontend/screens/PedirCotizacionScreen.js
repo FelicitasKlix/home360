@@ -4,7 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 
 export default function CotizacionScreen({ route, navigation }) {
   const { professional, category, userEmail, userType} = route.params;
-  const API_URL = "http://192.168.0.19:8080";
+  const API_URL = "https://home360-44h2.onrender.com";
   const [description, setProblema] = useState('');
   const [location, setDireccion] = useState('');
 

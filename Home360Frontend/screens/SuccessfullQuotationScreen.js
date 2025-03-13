@@ -1,6 +1,5 @@
 import React, { use } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, SafeAreaView } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
 import TabBar from '../navigation/TabBar';
 
 export default function SuccessfulQuotationScreen({ route, navigation }) {
