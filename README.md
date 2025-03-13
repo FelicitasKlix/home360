@@ -22,6 +22,7 @@ El frontend está desarrollado en **React Native** y actualmente se prueba local
    ```bash
    git clone https://github.com/tu-usuario/home360.git
    cd home360
+   cd Home360Frontend
    ```
 2. Instala las dependencias:
    ```bash
