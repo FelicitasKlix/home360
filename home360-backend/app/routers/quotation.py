@@ -5,7 +5,6 @@ from fastapi import APIRouter, status, HTTPException
 from fastapi.responses import JSONResponse
 from app.models.entities.Quotation import Quotation
 from app.models.entities.Professional import Professional
-from app.models.entities.Patient import Patient
 from app.models.entities.User import User
 from firebase_admin import firestore
 from app.models.responses.QuotationResponses import (
@@ -93,10 +92,8 @@ def get_quotations(userEmail: str):
     try:
         if Professional.is_professional(userEmail):
             quotations = Quotation.get_by_professional_email(userEmail)
-        if Patient.is_patient(userEmail):
+        if User.is_user(userEmail):
             quotations = Quotation.get_by_user_email(userEmail)
-        #if User.is_user(userEmail):
-            #quotations = Quotation.get_by_user_email(userEmail)
         
         response_data = {
             "pending": [],
@@ -386,50 +383,6 @@ def mark_work_completed(serviceId: str, userType: str):
 
     return {"message": f"Estado actualizado a {status}"}
 
-'''
-@router.post("/review")
-async def submit_review(data: dict):
-    try:
-        quotation_id = data["quotation_id"]
-        #empieza
-        user_email = data["user_email"]
-
-        if Professional.is_professional(user_email):
-            user_data = Professional.get_professionals_by_email(user_email)
-            user_ref = db.collection("professionals").where("email", "==", user_email).get()
-        if Patient.is_patient(user_email):
-            user_data = Patient.get_patients_by_email(user_email)
-            user_ref = db.collection("patients").where("email", "==", user_email).get()
-        
-        user_doc_ref = user_ref[0].reference
-        # Obtener el conteo actual de reseñas
-        current_reviews = user_data.get("reviews", 0)
-
-        # Incrementar en 1
-        user_doc_ref.update({"reviews": current_reviews + 1})
-        #termina
-
-        doc_ref = db.collection("quotations").document(quotation_id)
-        doc = doc_ref.get()
-
-        if doc.exists:
-            current_review = doc.to_dict().get("review", {})
-        else:
-            current_review = {}
-
-        updated_review = {
-            "review_for_user": data.get("review_for_user", current_review.get("review_for_user")),
-            "points_for_user": data.get("points_for_user", current_review.get("points_for_user")),
-            "review_for_professional": data.get("review_for_professional", current_review.get("review_for_professional")),
-            "points_for_professional": data.get("points_for_professional", current_review.get("points_for_professional")),
-        }
-
-        doc_ref.update({"review": updated_review})
-
-        return {"success": True, "message": "Review added"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-'''
 
 @router.post("/review")
 async def submit_review(data: dict):
@@ -437,23 +390,20 @@ async def submit_review(data: dict):
         quotation_id = data["quotation_id"]
         user_email = data["user_email"]
 
-        # Determinar si el usuario es profesional o paciente
         if Professional.is_professional(user_email):
             user_data = Professional.get_professionals_by_email(user_email)
             user_ref = db.collection("professionals").where("email", "==", user_email).get()
-        elif Patient.is_patient(user_email):
-            user_data = Patient.get_patients_by_email(user_email)
-            user_ref = db.collection("patients").where("email", "==", user_email).get()
+        elif User.is_user(user_email):
+            user_data = User.get_users_by_email(user_email)
+            user_ref = db.collection("users").where("email", "==", user_email).get()
         else:
             raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
         user_doc_ref = user_ref[0].reference
 
-        # Obtener conteos actuales
         current_reviews = user_data.get("reviews", 0)
         current_rewards = user_data.get("rewards", 0)
 
-        # Lógica de actualización
         if current_reviews + 1 >= 10:
             # Si llega a 10 reviews, resetear reviews a 0 y sumar 1 a rewards
             user_doc_ref.update({"reviews": 0, "rewards": current_rewards + 1})
@@ -461,7 +411,6 @@ async def submit_review(data: dict):
             # Caso normal: solo sumar 1 a reviews
             user_doc_ref.update({"reviews": current_reviews + 1})
 
-        # Actualizar la cotización con la reseña
         doc_ref = db.collection("quotations").document(quotation_id)
         doc = doc_ref.get()
 

@@ -2,32 +2,57 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import axios from 'axios';
-import TabBar from '../navigation/TabBar';
 
 const API_URL = "http://192.168.0.19:8080";
 
 export default function ProfessionalDetailsScreen({ route, navigation }) {
   const { professional, category, userEmail, userType } = route.params;
   const [reviews, setReviews] = useState([]);
+  const [workImages, setWorkImages] = useState([]);
 
   useEffect(() => {
     const fetchReviews = async () => {
       try {
         const response = await axios.get(`${API_URL}/professionals/reviews/${professional.email}`);
-        const data = response.data.reviews;
-
         if (response.data) {
           setReviews(response.data.reviews);
         } else {
-          console.error("Error al obtener las reseñas:", data.detail);
+          console.error("Error al obtener las reseñas:", response.data.detail);
         }
       } catch (error) {
-        console.error("Error en la solicitud:", error);
+        console.error("Error en la solicitud de reseñas:", error);
+      }
+    };
+
+    const fetchProfessionalImages = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/professionals/get-images/${professional.email}`);
+        console.log("Imágenes del profesional:", response.data);
+        
+        // Maneja adecuadamente diferentes formatos de respuesta
+        if (Array.isArray(response.data)) {
+          // Si es un array de strings
+          if (typeof response.data[0] === 'string') {
+            setWorkImages(response.data);
+          }
+          // Si es un array de objetos con propiedad url
+          else if (response.data[0] && response.data[0].url) {
+            const urls = response.data.map(item => item.url);
+            setWorkImages(urls);
+          } else {
+            console.error('Formato de respuesta inesperado:', response.data[0]);
+          }
+        } else {
+          console.error('Formato de respuesta inesperado:', response.data);
+        }
+      } catch (error) {
+        console.error("Error al obtener imágenes del profesional:", error);
       }
     };
 
     fetchReviews();
-  }, [professional.email]); // Se ejecuta cuando cambia el email del profesional
+    fetchProfessionalImages();
+  }, [professional.email]);
 
   return (
     <FlatList
@@ -79,14 +104,25 @@ export default function ProfessionalDetailsScreen({ route, navigation }) {
             </View>
           </View>
 
-          {/* Imágenes de trabajos */}
-          <View style={styles.imagesContainer}>
-            {professional.work_images?.slice(0, 2).map((img, index) => (
-              <Image key={index} source={{ uri: img }} style={styles.workImage} />
-            ))}
-            <TouchableOpacity style={styles.moreWorks}>
-              <Text style={styles.moreWorksText}>Ver más trabajos</Text>
-            </TouchableOpacity>
+          {/* Imágenes de trabajos - Galería con FlatList horizontal */}
+          <View style={styles.workImagesSection}>
+            <Text style={styles.sectionTitle}>Trabajos realizados</Text>
+            {workImages.length > 0 ? (
+              <FlatList
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                data={workImages}
+                keyExtractor={(item, index) => index.toString()}
+                renderItem={({ item }) => (
+                  <View style={styles.workImageContainer}>
+                    <Image source={{ uri: item }} style={styles.workImageGallery} />
+                  </View>
+                )}
+                contentContainerStyle={styles.imageGalleryContainer}
+              />
+            ) : (
+              <Text style={styles.noImagesText}>No hay imágenes disponibles</Text>
+            )}
           </View>
 
           {/* Botón Pedir Cotización */}
@@ -98,31 +134,33 @@ export default function ProfessionalDetailsScreen({ route, navigation }) {
           >
             <Text style={styles.quoteButtonText}>Pedir Cotización</Text>
           </TouchableOpacity>
+          
+          <Text style={styles.reviewsTitle}>Opiniones</Text>
         </>
       }
-      data={reviews} // Ahora estamos pasando las reseñas desde el estado
+      data={reviews.length > 0 ? reviews : [{ dummy: true }]} // Asegura que siempre haya al menos un elemento
       keyExtractor={(item, index) => index.toString()}
       renderItem={({ item }) => (
-        <View style={styles.reviewCard}>
-          <Text style={styles.reviewName}>Usuario</Text>
-          <Text style={styles.reviewText}>{item.review_for_professional}</Text>
-          <View style={styles.rating}>
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Icon
-                key={index}
-                name={index < item.points_for_professional ? 'star' : 'star-outline'}
-                size={16}
-                color="#FFD700"
-              />
-            ))}
+        item.dummy ? (
+          <Text style={styles.noReviewsText}>No hay reseñas disponibles</Text>
+        ) : (
+          <View style={styles.reviewCard}>
+            <Text style={styles.reviewName}>Usuario</Text>
+            <Text style={styles.reviewText}>{item.review_for_professional}</Text>
+            <View style={styles.rating}>
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Icon
+                  key={index}
+                  name={index < item.points_for_professional ? 'star' : 'star-outline'}
+                  size={16}
+                  color="#FFD700"
+                />
+              ))}
+            </View>
           </View>
-        </View>
+        )
       )}
-      ListFooterComponent={
-        <TouchableOpacity style={styles.moreReviews}>
-          <Text style={styles.moreReviewsText}>Ver más opiniones</Text>
-        </TouchableOpacity>
-      }
+      
     />
   );
 }
@@ -146,6 +184,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 80,
+    paddingHorizontal: 15,
   },
   avatar: {
     width: 80,
@@ -176,42 +215,53 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 5,
   },
-  imagesContainer: {
-    flexDirection: 'row',
+  workImagesSection: {
     marginTop: 20,
-    justifyContent: 'space-between',
+    paddingHorizontal: 15,
   },
-  workImage: {
-    width: '48%',
-    height: 100,
-    borderRadius: 10,
-  },
-  moreWorks: {
-    width: '48%',
-    height: 100,
-    marginLeft: 20,
-    backgroundColor: '#444',
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  moreWorksText: {
-    color: 'white',
+  sectionTitle: {
+    fontSize: 18,
     fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 10,
+  },
+  imageGalleryContainer: {
+    paddingVertical: 10,
+  },
+  workImageContainer: {
+    marginRight: 10,
+  },
+  workImageGallery: {
+    width: 150,
+    height: 150,
+    borderRadius: 10,
+  },
+  noImagesText: {
+    color: '#AAAAAA',
+    textAlign: 'center',
+    padding: 20,
   },
   quoteButton: {
     backgroundColor: '#2D9135',
     paddingVertical: 12,
     borderRadius: 10,
-    marginLeft: 20,
-    marginRight: 20,
+    marginHorizontal: 20,
     alignItems: 'center',
     marginTop: 20,
+    marginBottom: 10,
   },
   quoteButtonText: {
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  reviewsTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+    marginTop: 20,
+    marginBottom: 10,
+    paddingHorizontal: 20,
   },
   reviewCard: {
     backgroundColor: '#1E1E1E',
@@ -233,14 +283,19 @@ const styles = StyleSheet.create({
     color: 'white',
     marginTop: 5,
   },
+  noReviewsText: {
+    color: '#AAAAAA',
+    textAlign: 'center',
+    padding: 20,
+  },
   moreReviews: {
     backgroundColor: '#444',
     paddingVertical: 10,
     borderRadius: 10,
-    marginLeft: 20,
-    marginRight: 20,
+    marginHorizontal: 20,
     alignItems: 'center',
     marginTop: 10,
+    marginBottom: 20,
   },
   moreReviewsText: {
     color: 'white',

@@ -52,6 +52,7 @@ const ProfessionalHomeScreen = ({ route, navigation }) => {
 
   const acceptService = async (serviceId) => {
     try {
+      console.log(serviceId);
       setAccepting(serviceId);
       setServiceId(serviceId);
       const response = await axios.post(`${API_URL}/services/emergency/accept`, {
@@ -170,30 +171,7 @@ const ProfessionalHomeScreen = ({ route, navigation }) => {
       </View>
       
       {/* Menú inferior */}
-      <View style={styles.tabBar}>
-            <TouchableOpacity 
-                    style={styles.tabItem} 
-                    onPress={() => navigation.navigate('ProfessionalHome', {userEmail, userType })}>
-                    <Icon name="home-outline" size={24} color="white" />
-                    <Text style={styles.tabText}>Home</Text>
-                </TouchableOpacity>
-              <TouchableOpacity style={styles.tabItem} onPress={() => navigation.navigate('Solicitudes', { userEmail, userType })}>
-                <Icon name="construct-outline" size={24} color="white" />
-                <Text style={styles.tabText}>Solicitudes</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.tabItem}
-                      onPress={() => {
-                        if (userRole === 'professional') {
-                          navigation.navigate('ProfessionalProfile', { userEmail, userType });
-                        } else {
-                          navigation.navigate('UserProfile', { userEmail, userType });
-                        }
-                      }}>
-                        <Icon name="person-outline" size={24} color="white" />
-                        <Text style={styles.tabText}>Perfil</Text>
-                      </TouchableOpacity>
-            </View>
+      <TabBar navigation={navigation} userEmail={userEmail} userType={userType} />
 
     </SafeAreaView>
   );

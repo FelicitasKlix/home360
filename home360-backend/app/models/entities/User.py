@@ -78,7 +78,13 @@ class User:
         
     @staticmethod
     def fetch_rewards_for_user(email):
-        docs = db.collection("patients").where("email", "==", email).get()
+        docs = db.collection("users").where("email", "==", email).get()
+
+        for doc in docs:
+            data = doc.to_dict()
+            return data.get("reviews", 0)
+        
+        return 0
 
     def create(self):
         if db.collection("users").document(self.id).get().exists:

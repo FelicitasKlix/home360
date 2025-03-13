@@ -56,22 +56,6 @@ export default function HomeScreen({ route, navigation }) {
     }
   }
 
-  const handleTestNotification = async () => {
-    try {
-      const response = await fetch(`${API_URL}/users/send-notification`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userEmail })
-      });
-      
-      const data = await response.json();
-      
-    } catch (error) {
-      Alert.alert("Error", "Hubo un problema al enviar la notificación");
-      console.error(error);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.container}>
@@ -87,12 +71,6 @@ export default function HomeScreen({ route, navigation }) {
           style={styles.outlineButton} 
           onPress={() => navigation.navigate('ServicioExpress', { userEmail, userType})}>
           <Text style={styles.outlineButtonText}>Servicio Express</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={styles.testButton} 
-          onPress={handleTestNotification}>
-          <Text style={styles.testButtonText}>Probar Push Notifications</Text>
         </TouchableOpacity>
       </View>
 

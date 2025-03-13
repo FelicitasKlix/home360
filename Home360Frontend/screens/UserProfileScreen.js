@@ -41,6 +41,14 @@ const UserProfileScreen = ({ route, navigation }) => {
     }
   };
 
+  const handleUnlockBenefits = async () => {
+    try {
+      Alert.alert('Canjeá tu beneficio!', 'Enviá el monto del próximo trabajo que contrates a rewards@home360.com y te devolveremos el total!');
+    } catch (error) {
+      Alert.alert('Error', 'No se pudo procesas');
+    }
+  };
+
   const handleChangePassword = async () => {
     if (newPassword !== confirmPassword) {
       Alert.alert('Error', 'Las contraseñas no coinciden');
@@ -58,15 +66,6 @@ const UserProfileScreen = ({ route, navigation }) => {
       setConfirmPassword('');
     } catch (error) {
       Alert.alert('Error', 'No se pudo cambiar la contraseña');
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    try {
-      await axios.delete(`${API_URL}/users/delete-account`, { data: { email: user.email } });
-      Alert.alert('Cuenta eliminada', 'Tu cuenta ha sido eliminada con éxito');
-    } catch (error) {
-      Alert.alert('Error', 'No se pudo eliminar la cuenta');
     }
   };
 
@@ -113,7 +112,6 @@ const UserProfileScreen = ({ route, navigation }) => {
               </TouchableOpacity>
             </View>
   
-            {/* Sección de Sellos Obtenidos */}
             <View style={styles.sectionContainer}>
               <Text style={styles.subtitle2}>Sellos Obtenidos</Text>
               {reviews > 0 ? (
@@ -130,20 +128,16 @@ const UserProfileScreen = ({ route, navigation }) => {
               )}
             </View>
   
-            {/* Sección de Beneficios */}
             {rewards > 0 && (
               <View style={styles.sectionContainer}>
                 {[...Array(rewards)].map((_, index) => (
-                  <TouchableOpacity key={index} style={styles.rewardCard} onPress={() => alert("Canjear beneficio")}>
+                  <TouchableOpacity key={index} style={styles.rewardCard} onPress={handleUnlockBenefits}>
                     <Text style={styles.rewardText}>Desbloqueá tu beneficio</Text>
                   </TouchableOpacity>
                 ))}
               </View>
             )}
   
-            <TouchableOpacity style={styles.buttonDelete} onPress={handleDeleteAccount}>
-              <Text style={styles.buttonTextOutline}>Eliminar cuenta</Text>
-            </TouchableOpacity>
             <TouchableOpacity style={styles.buttonSupport} onPress={() => Alert.alert("Soporte", "support@home360.com")}>
               <Text style={styles.buttonTextOutline}>Soporte</Text>
             </TouchableOpacity>
@@ -213,17 +207,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  buttonDelete: {
-    backgroundColor: 'red',
-    padding: 15,
-    borderRadius: 10,
-    width: '90%',
-    alignSelf: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
   buttonSupport: {
-    backgroundColor: '#EBEBEB',
+    backgroundColor: '#008A45',
     padding: 15,
     borderRadius: 10,
     width: '90%',
@@ -237,16 +222,18 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   rewardCard: {
-    backgroundColor: "#008A45",
+    backgroundColor: "#1E1E1E",
     padding: 15,
     borderRadius: 10,
     alignItems: "center",
     marginVertical: 5,
+    borderWidth: 2,
+    borderColor: '#008A45', 
   },
   rewardText: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#333",
+    color: "#EBEBEB",
   },
   
 });

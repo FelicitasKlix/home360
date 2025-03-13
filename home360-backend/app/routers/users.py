@@ -9,7 +9,6 @@ from fastapi import APIRouter, status, Depends, Body, HTTPException
 from fastapi.responses import JSONResponse
 
 from app.models.entities.Auth import Auth
-from app.models.entities.Patient import Patient
 from app.models.entities.User import User
 from app.models.entities.Professional import Professional
 
@@ -23,7 +22,6 @@ from app.models.responses.UserResponses import (
     RegisterErrorResponse,
     UserProfileErrorResponse,
     UserInfoErrorResponse,
-    IsLoggedInResponse,
     SuccessfullChangePasswordResponse,
     ChangePasswordErrorResponse,
     UserTypeResponse,
@@ -36,8 +34,6 @@ from app.models.responses.RewardResponses import(
     RewardsErrorResponse
 )
 
-#from app.models.responses.ProfessionalResponses import ProfessionalResponse
-
 from app.models.requests.UserRequests import (
     UserLoginRequest,
     UserRegisterRequest,
@@ -49,7 +45,6 @@ from app.models.requests.UserRequests import (
 from app.models.requests.NotificationsRequests import (NotificationRequest, ChatNotificationRequest)
 from app.models.responses.NotificationResponses import (
     SuccessfullNotificationResponse,
-    ErrorNotificationResponse,
 )
 
 db = firestore.client()
@@ -174,19 +169,12 @@ async def register(
     del register_request.password
     print(register_request.role)
     if register_request.role == "user":
-        patient_data = {
+        user_data = {
             key: value
             for key, value in register_request.model_dump().items()
         }
-        patient = Patient(**patient_data, id=auth_uid)
-        patient.create()
-    #if register_request.role == "user":
-        #user_data = {
-            #key: value
-            #for key, value in register_request.model_dump().items()
-        #}
-        #user = User(**user_data, id=auth_uid)
-        #user.create()
+        user = User(**user_data, id=auth_uid)
+        user.create()
        
     elif register_request.role == "professional":
         print("Creating professional with data:", register_request.model_dump(exclude_none=True))
@@ -220,10 +208,8 @@ def get_user_type(user_email: str):
     * Throw an error if users role retrieving process fails.
     """
     try:
-        if Patient.is_patient(user_email):
+        if User.is_user(user_email):
             return {"type": "user"}
-        #if User.is_user(user_email):
-            #return {"type": "user"}
         if Professional.is_professional(user_email):
             return {"type": "professional"}
     except:
@@ -257,12 +243,9 @@ def get_user_info(user_email: str):
         if Professional.is_professional(user_email):
             professional = Professional.get_professionals_by_email(user_email)
             return professional
-        if Patient.is_patient(user_email):
-            patient = Patient.get_patients_by_email(user_email)
-            return patient
-        #if User.is_user(receiver_email):
-            #user = User.get_users_by_email(receiver_email)
-            #return user['first_name']
+        if User.is_user(user_email):
+            user = User.get_users_by_email(user_email)
+            return user
         else:
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -298,12 +281,9 @@ def get_user_info(receiver_email: str):
         if Professional.is_professional(receiver_email):
             professional = Professional.get_professionals_by_email(receiver_email)
             return professional['first_name']
-        if Patient.is_patient(receiver_email):
-            patient = Patient.get_patients_by_email(receiver_email)
-            return patient['first_name']
-        #if User.is_user(receiver_email):
-            #user = User.get_users_by_email(receiver_email)
-            #return user['first_name']
+        if User.is_user(receiver_email):
+            user = User.get_users_by_email(receiver_email)
+            return user['first_name']
         else:
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -346,10 +326,8 @@ def save_device_token(device_token_request: DeviceTokenRequest,):
 
         if Professional.is_professional(email):
             Professional.add_device_token(email, token)
-        elif Patient.is_patient(email):
-            Patient.add_device_token(email, token)
-        #elif User.is_user(email):
-            #User.add_device_token(email, token)
+        elif User.is_user(email):
+            User.add_device_token(email, token)
         else:
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -389,10 +367,8 @@ def get_device_token(user_email: str):
 
         if Professional.is_professional(user_email):
             token = Professional.get_device_token(user_email)
-        elif Patient.is_patient(user_email):
-            token = Patient.get_device_token(user_email)
-        #elif User.is_user(user_email):
-            #token = User.get_device_token(user_email)
+        elif User.is_user(user_email):
+            token = User.get_device_token(user_email)
         else:
             return JSONResponse(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -406,31 +382,6 @@ def get_device_token(user_email: str):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"detail": f"Error interno del servidor: {str(e)}"},
         )
-
-'''
-@router.get(
-    "/is-logged-in", status_code=status.HTTP_200_OK, response_model=IsLoggedInResponse
-)
-def is_logged_in(token=Depends(Auth.get_bearer_token)):
-    """
-    Get a users logged in status.
-
-    This will return the users logged in status.
-
-    This path operation will:
-
-    * Return True if user is logged in.
-    * Return False if user is not logged in.
-    """
-    if token:
-        try:
-            auth.verify_id_token(token.credentials)
-            return {"is_logged_in": True}
-        except:
-            return {"is_logged_in": False}
-    return {"is_logged_in": False}
-
-'''
 
 @router.post(
     "/change-password-user",
@@ -508,8 +459,7 @@ async def send_push_notification(notification_request: NotificationRequest):
         print(notification_request.userEmail)
         userEmail = notification_request.userEmail
         
-        docs = db.collection("patients").where("email", "==", userEmail).stream()
-        #docs = db.collection("users").where("email", "==", userEmail).stream()
+        docs = db.collection("users").where("email", "==", userEmail).stream()
         token = None
         for doc in docs:
             token = doc.to_dict().get("device_token")
@@ -543,8 +493,7 @@ async def send_push_notifications(notification_request: ChatNotificationRequest)
         userEmail = notification_request.userEmail
         message = notification_request.message
         
-        docs = db.collection("patients").where("email", "==", userEmail).stream()
-        #docs = db.collection("users").where("email", "==", userEmail).stream()
+        docs = db.collection("users").where("email", "==", userEmail).stream()
         token = None
         for doc in docs:
             token = doc.to_dict().get("device_token")
@@ -587,9 +536,7 @@ def get_user_rewards(user_email: str):
     Get the rewards (sellos obtenidos) of the user.
     """
     try:
-        rewards = Patient.fetch_rewards_for_user(user_email)
-        print(rewards)
-        #rewards = User.fetch_rewards_for_user(user_email)
+        rewards = User.fetch_rewards_for_user(user_email)
         return {"amount": rewards}
     except Exception as e:
         return JSONResponse(
@@ -601,8 +548,7 @@ def get_user_rewards(user_email: str):
 @router.get("/rewards/{email}")
 async def fetch_rewards_for_user(email: str):
     try:
-        # Buscar en ambas colecciones
-        user_ref = db.collection("patients").where("email", "==", email).get()
+        user_ref = db.collection("users").where("email", "==", email).get()
         if not user_ref:
             user_ref = db.collection("professionals").where("email", "==", email).get()
         

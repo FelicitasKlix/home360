@@ -19,15 +19,8 @@ import * as Notifications from "expo-notifications";
 import io from "socket.io-client";
 
 const API_URL = "http://192.168.0.19:8080";
-//const SOCKET_URL = "http://192.168.0.19:8080/ws";
-//const SOCKET_URL = "http://192.168.0.19:8080/sockets";
-//const socket = io(SOCKET_URL);
-//const socket = io('http://192.168.0.19:8080', {path: '/sockets/sockets'})
-//const socket = io('http://192.168.0.19:8080/sockets/sockets')
-/*const socket = io('http://192.168.0.19:8080/sockets', {
-  path: "/sockets/socket.io/"
-});
-*/
+export const WS_URL = "ws://192.168.0.19:8080";
+
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -55,13 +48,68 @@ const ChatScreen = ({ route, navigation }) => {
   const [userReview, setUserReview] = useState("");
   const [professionalReview, setProfessionalReview] = useState("");
   const [receiverDeviceToken, setReceiverDeviceToken] = useState("");
+  const ws = useRef(null);
 
-  //const [isConnected, setIsConnected] = useState(socket.connected);
+  const connectWebSocket = () => {
+    // Cerrar conexión existente si la hay
+    if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+      ws.current.close();
+    }
+    
+    // Crear nueva conexión
+    ws.current = new WebSocket(`${WS_URL}/ws/${userEmail}`);
+    
+    ws.current.onopen = () => {
+      console.log('WebSocket conectado');
+    };
+    
+    ws.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log('Mensaje recibido:', data);
+      
+      // Solo procesar mensajes para esta conversación
+      if (data.quotation_id === quotationId) {
+        if ((data.sender === receiverEmail && data.receiver === userEmail) || 
+            (data.sender === comonUserEmail && data.receiver === userEmail)) {
+          setMessages(prevMessages => [...prevMessages, {
+            message: data.message,
+            sender: data.sender,
+            timestamp: data.timestamp
+          }]);
+        }
+      }
+    };
+    
+    ws.current.onerror = (error) => {
+      console.error('Error de WebSocket:', error);
+    };
+    
+    ws.current.onclose = () => {
+      console.log('WebSocket desconectado');
+    };
+  };
   
-  // Socket.io reference
-  //const socketRef = useRef(null);
-  //const actualReceiver = userEmail !== receiverEmail ? receiverEmail : comonUserEmail;
+  // Conectar WebSocket al montar el componente
+  useEffect(() => {
+    connectWebSocket();
+    
+    // Configurar un ping periódico para mantener viva la conexión
+    const pingInterval = setInterval(() => {
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({ type: 'ping' }));
+      }
+    }, 30000); // Cada 30 segundos
+    
+    // Limpiar al desmontar
+    return () => {
+      clearInterval(pingInterval);
+      if (ws.current) {
+        ws.current.close();
+      }
+    };
+  }, [userEmail]);
 
+  
   useEffect(() => {
     fetchMessages();
     fetchReceiverName();
@@ -69,82 +117,47 @@ const ChatScreen = ({ route, navigation }) => {
     fetchQuotation();
     fetchReceiverDeviceToken();
   }, [quotationId]);
-/*
-  useEffect(()=>{
-    socket.on('connect', () =>{
-      setIsConnected(socket.connected);
-    });
-    socket.on('disconnect', () =>{
-      setIsConnected(socket.connected);
-    });
-    socket.on('join', (data) => {
-      setMessages((prevMessages) => [...prevMessages, {...data, type: 'join'}]);
-    });
-    socket.on('chat', (data) => {
-      setMessages((prevMessages) => [...prevMessages, {...data, type: 'chat'}]);
-    });
-  })*/
-/*
-  // Connect to socket on component mount
-  useEffect(() => {
-    // Initialize socket connection
-    //socketRef.current = io(SOCKET_URL);
-    socketRef.current = io(SOCKET_URL, { withCredentials: true});
-    //, transports: ["websocket"]
-    // Register events
-    socketRef.current.on('connect', () => {
-      console.log('Connected to socket server');
-      
-      // Register the user with their email
-      socketRef.current.emit('join_user', { userEmail });
-    });
-    
-    // Listen for incoming messages
-    socketRef.current.on('new_message', (data) => {
-      console.log('Received message:', data);
-      
-      // Only add the message if it's related to the current conversation and quotation
-      if (data.quotation_id === quotationId && 
-          ((data.sender === actualReceiver && data.receiver === userEmail) || 
-           (data.sender === userEmail && data.receiver === actualReceiver))) {
-        
-        setMessages(prevMessages => [
-          ...prevMessages, 
-          { 
-            message: data.message, 
-            sender: data.sender, 
-            timestamp: data.timestamp 
-          }
-        ]);
-      }
-    });
-    
-    // Listen for quotation updates
-    socketRef.current.on('quotation_update', (data) => {
-      if (data.quotation_id === quotationId) {
-        fetchQuotation();
-      }
-    });
-    
-    socketRef.current.on('disconnect', () => {
-      console.log('Disconnected from socket server');
-    });
-    
-    // Clean up on component unmount
-    return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-      }
-    };
-  }, [userEmail, actualReceiver, quotationId]);
 
-  useEffect(() => {
-    fetchMessages();
-    fetchReceiverName();
-    fetchUserType();
-    fetchQuotation();
-    fetchReceiverDeviceToken();
-  }, [quotationId]);*/
+  const sendMessage = async () => {
+    if (!newMessage.trim()) return;
+    
+    try {
+      const timestamp = new Date().toISOString();
+      
+      // Objeto del mensaje
+      const messageData = {
+        message: newMessage,
+        sender: userEmail,
+        receiver: userEmail !== receiverEmail ? receiverEmail : comonUserEmail,
+        quotation_id: quotationId,
+        timestamp: timestamp
+      };
+      
+      // Guardar en la base de datos
+      await axios.post(`${API_URL}/chat/send`, messageData);
+      
+      // Añadir a la interfaz
+      setMessages([...messages, { 
+        message: newMessage, 
+        sender: userEmail, 
+        timestamp: timestamp 
+      }]);
+      
+      // Enviar por WebSocket si está conectado
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify(messageData));
+      }
+      
+      setNewMessage("");
+      
+      // Enviar notificación push si es necesario
+      if (receiverDeviceToken) {
+        sendPushNotification();
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  };
 
   const fetchUserType = async () => {
     try {
@@ -212,71 +225,6 @@ const ChatScreen = ({ route, navigation }) => {
       setLoading(false);
     }
   };
-
-  const sendMessage = async () => {
-    if (!newMessage.trim()) return;
-
-    try {
-      await axios.post(`${API_URL}/chat/send`, {
-        message: newMessage,
-        sender: userEmail,
-        receiver: receiverEmail,
-        quotation_id: quotationId,
-      });
-
-      setMessages([...messages, { message: newMessage, sender: userEmail, timestamp: new Date().toISOString() }]);
-      //socket.emit('chat', newMessage)
-      setNewMessage("");
-      if (receiverDeviceToken) {
-        sendPushNotification(receiverEmail, newMessage);
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-    }
-  };
-/*
-  const sendMessage = async () => {
-    if (!newMessage.trim()) return;
-
-    try {
-      // Create message object
-      const messageData = {
-        message: newMessage,
-        sender: userEmail,
-        receiver: actualReceiver, 
-        quotation_id: quotationId,
-        timestamp: new Date().toISOString()
-      };
-
-      // Send to backend API to save in database
-      await axios.post(`${API_URL}/chat/send`, messageData);
-
-      // Add message to state (for immediate UI update)
-      setMessages(prevMessages => [
-        ...prevMessages, 
-        { 
-          message: newMessage, 
-          sender: userEmail, 
-          timestamp: new Date().toISOString() 
-        }
-      ]);
-      
-      // Emit the message through socket
-      if (socketRef.current) {
-        socketRef.current.emit('send_message', messageData);
-      }
-
-      // Clear the input field
-      setNewMessage("");
-      
-      // Send push notification
-      if (receiverDeviceToken) {
-        sendPushNotification();
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-    }
-  };*/
 
   const sendPushNotification = async () => {
       try {
@@ -1034,7 +982,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingHorizontal: 10,
-    alignItems: 'center'
+    alignItems: 'center',
+    marginBottom: 10
   },
   actionButton: {
     padding: 12,

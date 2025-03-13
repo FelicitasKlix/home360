@@ -21,3 +21,12 @@ class GetProfessionalsError(BaseModel):
 
 class GetProfessionalReviews(BaseModel):
     reviews: list
+
+class SuccessfulImageResponse(BaseModel):
+    id: str
+    file_name: str
+    uploaded_at: int
+    url: str
+
+class ErrorImageResponse(BaseModel):
+    detail: str

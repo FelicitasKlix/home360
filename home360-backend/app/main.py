@@ -5,19 +5,14 @@ from .config import initialize_firebase_app
 
 initialize_firebase_app()
 
-from fastapi import FastAPI, status, Depends, Request
+from fastapi import FastAPI, status, Depends, Request, WebSocket, WebSocketDisconnect
 from fastapi.encoders import jsonable_encoder
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse, HTMLResponse, JSONResponse
 from fastapi.exceptions import RequestValidationError
 from fastapi.openapi.utils import get_openapi
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
-
-# Importaciones para Socket.IO
-#import socketio
-#from app.sockets.chat_socket import setup_socket_events
-
-#from app.sockets import sio_app
+from typing import Dict, List
 
 load_dotenv()
 
@@ -26,18 +21,8 @@ from app.models.entities.Auth import Auth
 
 CTX_PORT: int = int(os.environ.get("PORT")) if os.environ.get("PORT") else 8080
 
-# Configuración de Socket.IO
-#sio = socketio.AsyncServer(
- #   async_mode='asgi',
-  #  cors_allowed_origins='*'
-#)
-
-# Creación de la aplicación Socket.IO ASGI
-#socket_app = socketio.ASGIApp(sio)
-
 # Configuración de FastAPI
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url="/api/openapi.json")
-#app.mount("/sockets", sio_app)
 
 app.add_middleware(
     CORSMiddleware, 
@@ -47,11 +32,69 @@ app.add_middleware(
     allow_credentials=True,
 )
 
-# Configurar eventos de Socket.IO
-#setup_socket_events(sio)
+# Clase para gestionar conexiones WebSocket
+class ConnectionManager:
+    def __init__(self):
+        # Diccionario para almacenar conexiones activas {user_email: websocket}
+        self.active_connections: Dict[str, WebSocket] = {}
+        
+    async def connect(self, websocket: WebSocket, user_email: str):
+        await websocket.accept()
+        self.active_connections[user_email] = websocket
+        print(f"Usuario conectado: {user_email}")
+        
+    def disconnect(self, user_email: str):
+        if user_email in self.active_connections:
+            del self.active_connections[user_email]
+            print(f"Usuario desconectado: {user_email}")
+    
+    async def send_personal_message(self, message: dict, recipient_email: str):
+        if recipient_email in self.active_connections:
+            await self.active_connections[recipient_email].send_json(message)
+            return True
+        return False
+    
+    async def broadcast(self, message: dict):
+        for connection in self.active_connections.values():
+            await connection.send_json(message)
 
-# Montar la aplicación Socket.IO en /socket.io
-#app.mount('/socket.io', socket_app)
+manager = ConnectionManager()
+
+# Endpoint para WebSocket
+@app.websocket("/ws/{user_email}")
+async def websocket_endpoint(websocket: WebSocket, user_email: str):
+    await manager.connect(websocket, user_email)
+    try:
+        while True:
+            # Esperar a recibir un mensaje
+            data = await websocket.receive_json()
+            
+            # Procesar el mensaje recibido
+            sender = data.get("sender")
+            receiver = data.get("receiver")
+            message = data.get("message")
+            quotation_id = data.get("quotation_id")
+            timestamp = data.get("timestamp")
+            
+            # Crear objeto de mensaje para enviar
+            message_data = {
+                "sender": sender,
+                "receiver": receiver,
+                "message": message,
+                "quotation_id": quotation_id,
+                "timestamp": timestamp
+            }
+            
+            # Intentar enviar al destinatario
+            sent = await manager.send_personal_message(message_data, receiver)
+            
+            
+    except WebSocketDisconnect:
+        manager.disconnect(user_email)
+    except Exception as e:
+        print(f"Error en WebSocket: {e}")
+        manager.disconnect(user_email)
+
 
 routers = [users.router, services.router, specialties.router, professionals.router, quotation.router, chat.router, zones.router]
 
@@ -65,7 +108,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=jsonable_encoder(
             {
-                "detail": "Invalid input format",  # optionally include the errors
+                "detail": "Invalid input format",
                 "body": exc.body,
                 "error": exc.errors(),
             }
@@ -90,7 +133,6 @@ async def root() -> RedirectResponse:
 
     It returns the OPENAPI docs for the KMK API
     """
-    #return RedirectResponse(url="/redoc", status_code=status.HTTP_303_SEE_OTHER)
     return {"message": "API is working"}
 
 
